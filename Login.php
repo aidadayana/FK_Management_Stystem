@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 include("connection.php");
 
@@ -7,7 +8,10 @@ if(isset($_POST['login']))
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $query = "SELECT * FROM USER WHERE Email='$email' AND Password='$password'";
+    $query = "SELECT * FROM USER 
+              WHERE Email='$email' 
+              AND Password='$password'";
+
     $result = mysqli_query($conn,$query);
 
     if(mysqli_num_rows($result) > 0)
@@ -33,36 +37,87 @@ if(isset($_POST['login']))
     }
     else
     {
-        echo "<script>alert('Invalid Login');</script>";
+        echo "<script>alert('Invalid Email or Password');</script>";
     }
 }
+
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Login</title>
-    <link rel="stylesheet" href="css/style.css">
+
+    <title>Club Management Login</title>
+
+    <link rel="stylesheet" href="styleLogin.css">
+
 </head>
+
 <body>
 
-<div class="login-container">
+<div class="main-container">
 
-    <h1 class="login-title">Club Management</h1>
+    <!-- LEFT SIDE -->
 
-    <form method="POST">
+    <div class="left-panel">
 
-        <input type="email" name="email" class="input-box" placeholder="Enter Email" required>
+        <img src="images/logo.png" class="logo-image">
 
-        <input type="password" name="password" class="input-box" placeholder="Enter Password" required>
+        <h1 class="system-title">
+            Club Management
+        </h1>
 
-        <button type="submit" name="login" class="btn" style="width:100%; margin-top:20px;">
-            Login
-        </button>
+        <p class="system-text">
+            Empowering campus communities through smarter management.
+        </p>
 
-    </form>
+    </div>
+
+    <!-- RIGHT SIDE -->
+
+    <div class="right-panel">
+
+        <div class="login-container">
+
+            <h1 class="login-title">
+                Welcome Back
+            </h1>
+
+            <p class="login-subtitle">
+                Login to continue
+            </p>
+
+            <form method="POST">
+
+                <input type="email"
+                       name="email"
+                       class="input-box"
+                       placeholder="Enter Email"
+                       required>
+
+                <input type="password"
+                       name="password"
+                       class="input-box"
+                       placeholder="Enter Password"
+                       required>
+
+                <button type="submit"
+                        name="login"
+                        class="btn">
+
+                    Login
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
 
 </div>
 
 </body>
+
 </html>
