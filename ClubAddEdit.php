@@ -5,7 +5,7 @@
     <?php include('Navigation.php'); ?>
     <div class="main-content">
         <h1>Register / Edit Club</h1>
-        <form action="ClubListPage.php" style="background:white; padding:30px; border-radius:10px; max-width:600px;">
+        <form action="ClubList.php" style="background:white; padding:30px; border-radius:10px; max-width:600px;">
             <label>Club Name</label><input type="text" required>
             <label>Club Description</label><textarea rows="4"></textarea>
             <label>Advisor Name</label><input type="text">
