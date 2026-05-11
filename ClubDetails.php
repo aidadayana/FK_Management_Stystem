@@ -11,7 +11,7 @@
     <div class="main-content">
         <div class="header-row">
             <h1>Club Details</h1>
-            <a href="ClubListPage.php" class="btn btn-back">Back to List</a>
+            <a href="ClubList.php" class="btn btn-back">Back to List</a>
         </div>
 
         <div class="content-box">
@@ -81,8 +81,8 @@
         <div class="footer-actions">
             <button class="btn btn-primary">Join Club</button>
             <div class="admin-group">
-                <a href="CommManage.php" class="btn btn-outline">Manage Committee</a>
-                <a href="AddEditPage.php" class="btn btn-outline">Edit Club</a>
+                <a href="ClubCommManage.php" class="btn btn-outline">Manage Committee</a>
+                <a href="ClubAddEdit.php" class="btn btn-outline">Edit Club</a>
                 <button class="btn btn-danger">Delete</button>
             </div>
         </div>
