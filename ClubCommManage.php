@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
-    <title>Committee Management</title>
+    <title>COMMITTEE MANAGEMENT</title>
 </head>
 <body>
     <?php include('Navigation.php'); ?>
