@@ -75,11 +75,14 @@ body {
     margin-left: var(--sidebar-width);
     padding: 40px;
     width: calc(100% - var(--sidebar-width));
-    height: 100vh; /* Lock height to screen */
+    
+    /* CHANGE THESE TWO LINES: */
+    min-height: 100vh;   /* Use min-height instead of height */
+    overflow-y: auto;    /* Allow vertical scrolling specifically */
+    
     display: flex;
     flex-direction: column; 
     box-sizing: border-box;
-    overflow: hidden; /* Prevent page-level scroll */
 }
 
 /* SEARCH BAR - One-Page Lock */
