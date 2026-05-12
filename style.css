@@ -20,7 +20,7 @@
 
 body { 
     font-family: Arial, sans-serif; 
-    margin: 0;
+    margin: 0; 
     display: flex; 
     background-color: var(--light-gray); 
     color: var(--text-dark);
@@ -31,7 +31,7 @@ body {
     width: var(--sidebar-width);
     height: 100vh;
     background-color: var(--white);
-    border-right: 1px soid var(--border-color);
+    border-right: 1px solid var(--border-color);
     position: fixed;
     padding: 20px;
     box-sizing: border-box;
@@ -75,14 +75,11 @@ body {
     margin-left: var(--sidebar-width);
     padding: 40px;
     width: calc(100% - var(--sidebar-width));
-    
-    /* CHANGE THESE TWO LINES: */
-    min-height: 100vh;   /* Use min-height instead of height */
-    overflow-y: auto;    /* Allow vertical scrolling specifically */
-    
+    height: 100vh; /* Lock height to screen */
     display: flex;
     flex-direction: column; 
     box-sizing: border-box;
+    overflow: hidden; /* Prevent page-level scroll */
 }
 
 /* SEARCH BAR - One-Page Lock */
@@ -373,4 +370,7 @@ input:focus, select:focus {
     text-align: center;
     box-shadow: 0 4px 15px rgba(139, 30, 63, 0.2);
 }
+
+
+
 
