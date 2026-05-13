@@ -1,26 +1,18 @@
 /* GLOBAL STYLES */
 :root {
-    /* Main Branding - Upgraded to a deep, rich Burgundy */
-    --primary-blue: #8B1E3F; 
-    
-    /* Background - Your requested Warm Beige */
-    --light-gray: #D7B7A3; 
-    
-    /* Navigation/Sidebar - Clean White with Espresso text */
-    --white: #F3ECE6;
-    --text-dark: #2D2926;    /* Deep Espresso (Higher end than #333) */
-    
-    /* Accents & Borders - Using a soft Champagne to complement the beige */
+    --primary-maroon: #8B1E3F;   /* Burgundy */
+    --light-gray: #D7B7A3;    /* Warm Beige */
+    --white: #F3ECE6;         /* Cream/Off-white */
+    --text-dark: #2D2926;     /* Deep Espresso */
     --border-color: #D7B7A3; 
-    --danger-red: #E63946;   /* A more vibrant, modern red */
-    
-    /* Functional Variables */
+    --danger-red: #E63946;    /* Vibrant Red */
     --sidebar-width: 250px;
 }
 
 body { 
-    font-family: Arial, sans-serif; 
-    margin: 0; 
+    font-family: 'Poppins', sans-serif; 
+    letter-spacing: -0.01em; /* Tighter, modern spacing */
+    margin: 0;
     display: flex; 
     background-color: var(--light-gray); 
     color: var(--text-dark);
@@ -35,10 +27,11 @@ body {
     position: fixed;
     padding: 20px;
     box-sizing: border-box;
+    z-index: 100;
 }
 
 .sidebar h2 { 
-    color: var(--primary-blue); 
+    color: var(--primary-maroon); 
     font-size: 1.2rem; 
     margin-bottom: 30px; 
 }
@@ -64,229 +57,267 @@ body {
 
 .nav-menu a:hover, 
 .nav-menu a.active { 
-    background-color: var(--primary-blue); 
+    background-color: var(--primary-maroon); 
     color: var(--white); 
-    /* Subtle shadow to make the active link pop */
     box-shadow: 0 4px 10px rgba(139, 30, 63, 0.2); 
 }
 
-/* MAIN LAYOUT - Solidified */
+/* MAIN LAYOUT */
 .main-content {
     margin-left: var(--sidebar-width);
     padding: 40px;
     width: calc(100% - var(--sidebar-width));
-    height: 100vh; /* Lock height to screen */
+    min-height: 100vh;
+    overflow-y: auto;
     display: flex;
     flex-direction: column; 
     box-sizing: border-box;
-    overflow: hidden; /* Prevent page-level scroll */
 }
 
-/* SEARCH BAR - One-Page Lock */
-.search-container {
-    display: flex;
-    gap: 12px;
-    background: var(--white);
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    width: 100%;
-    box-sizing: border-box;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid var(--border-color);
-}
-
-.search-input {
-    flex-grow: 1; /* Stretches to fill width without pulling */
-    margin: 0;
-    height: var(--standard-height);
-}
-
-/* SLIDER LAYOUT - Grounded Gallery */
-.slider-wrapper {
-    width: 100%;
-    overflow: hidden; /* Mask for the scrollable list */
-    background: rgba(255, 255, 255, 0.15); /* Subtly grounds the cards */
-    border-radius: 15px;
-    padding: 25px;
-    box-sizing: border-box;
-    border: 1px solid rgba(215, 183, 163, 0.4);
-}
-
-.club-slider {
-    display: flex; 
-    flex-wrap: nowrap;
-    gap: 25px;
-    overflow-x: hidden; /* Only scrollable via JS buttons */
-    scroll-behavior: smooth;
-    padding-bottom: 5px;
-}
-
-.club-card {
-    flex: 0 0 280px; /* Fixed width prevents floating/shrinking */
-    background: var(--white);
-    padding: 25px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    flex-shrink: 0;
-}
-
-/* NAVIGATION BUTTONS - Center Anchored */
-.slider-controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: auto; /* Pushes buttons to the bottom of main-content */
-    padding-top: 20px;
-    padding-bottom: 20px;
-}
 .header-row { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    margin-bottom: 20px; 
+    margin-bottom: 25px; 
+    padding: 0
 }
 
-/* CARDS & CONTAINERS */
-.content-box, 
-.search-container, 
-.committee-list-section, 
-.assign-section, 
+.club-subtitle {
+    margin-bottom: 25px;
+    font-size: 1.6rem;
+    color: var(--primary-maroon);
+    font-weight: 600;
+    border-bottom: 2px solid rgba(139, 30, 63, 0.2);
+    padding-bottom: 10px;
+}
+
+/* BROWSE PAGE SEARCH BOX */
+.search-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    margin-bottom: 40px; /* Space between bar and boxes */
+}
+
+.filter-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 2;
+    min-width: 200px;
+}
+
+.status-select {
+    flex: 1;
+    min-width: 150px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+/* Status Badge for Admin View */
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.status-active { 
+    background: #d4edda; 
+    color: #155724; 
+}
+
+.status-inactive { 
+    background: #f8d7da; 
+    color: #721c24; 
+}
+
+/* CLUB GRID (BROWSE PAGE) */
+.club-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    align-items: stretch; /* Forces cards in the same row to have equal height */
+}
+
+/* CLUB CARD (BROWSE PAGE) */
+.club-card {
+    background: var(--white);
+    padding: 25px;
+    border-radius: 20px; /* Softer corners */
+    text-align: center;
+    border: 1px solid rgba(139, 30, 63, 0.08);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column; /* Stack content vertically */
+    justify-content: space-between; /* Pushes button to the bottom */
+}
+
+.club-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(139, 30, 63, 0.12);
+}
+
+
+
+/* CONTAINERS */
+.info-table-container,
 .form-container {
     background: var(--white);
     padding: 25px;
     margin-bottom: 20px;
     border-radius: 10px;
-    /* Softened shadow for a more modern feel */
     box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
-    border: 1px solid rgba(215, 183, 163, 0.3);
-}
-
-/* CLUB LIST GRID */
-.club-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.club-card {
-    background: var(--white);
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.club-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
-}
-
-.club-avatar {
-    width: 60px;
-    height: 60px;
-    background-color: #EAE0D5; /* Matches the beige theme */
-    margin: 0 auto 15px;
-    border-radius: 50%;
-}
-
-/* SLIDER LAYOUT */
-.slider-wrapper {
-    overflow: hidden; /* Hides the cards that are off-screen */
-    width: 100%;
-    padding: 10px 0;
-}
-
-.club-slider {
-    display: flex; /* Makes cards sit in a horizontal row */
-    gap: 20px;
-    overflow-x: auto; /* Allows manual swiping on mobile */
-    scroll-behavior: smooth;
-    scrollbar-width: none; /* Hides scrollbar on Firefox */
-}
-
-.club-slider::-webkit-scrollbar {
-    display: none; /* Hides scrollbar on Chrome/Safari */
-}
-
-.club-card {
-    min-width: 250px; /* Ensures cards don't shrink */
-    background: var(--white);
-    padding: 25px;
-    border-radius: 10px;
-    border: 1px solid #eee;
-    text-align: center;
-    flex-shrink: 0; /* Prevents cards from getting squashed */
-}
-
-/* NAVIGATION BUTTONS */
-.slider-controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 30px;
-}
-
-/* CLUB DETAILS PAGE SPECIFICS */
-.club-profile-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 15px;
-}
-
-.logo-box {
-    width: 80px;
-    height: 80px;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    font-weight: bold;
-    color: #888;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(215, 183, 163, 0.5);
 }
 
 /* TABLES */
-.details-table, 
 .management-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
 }
 
-.details-table th, 
 .management-table th {
     text-align: left;
     padding: 12px;
-    background-color: #fcfaf8; /* Extremely light beige tint for headers */
-    color: var(--primary-blue);
+    background-color: rgba(252, 252, 252, 255);
+    color: var(--primary-maroon);
     border-bottom: 2px solid var(--border-color);
 }
 
-.details-table td, 
 .management-table td {
     padding: 12px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(215, 183, 163, 0.3);
 }
+
 
 /* COMMITTEE MANAGEMENT SPLIT */
-.management-split {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
+.management-split { 
+    display: flex; 
+    gap: 30px; 
+    align-items: flex-start; 
 }
 
-.committee-list-section {
-    flex: 2;
+.committee-list-section { 
+    flex: 2; 
 }
 
-.assign-section {
-    flex: 1;
+.assign-section { 
+    flex: 1; 
+    position: sticky; 
+    top: 20px; 
+    background: var(--white); 
+    padding: 25px; 
+    border-radius: 15px; 
+    border: 1px solid var(--border-color);
+}
+        
+.table-select {
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.status-upcoming { 
+    background: #e3f2fd; 
+    color: #1976d2; 
+}
+
+.status-completed { 
+    background: #f5f5f5; 
+    color: #757575; 
+}
+
+.assign-section { 
+    flex: 1; 
+    position: sticky; 
+    top: 20px; 
+    background: #fff; 
+    padding: 25px; 
+    border-radius: 15px; 
+    border: 1px solid #ddd; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* Club Information Card */
+.club-info-card {
+    background: #fdfdfd; 
+    border: 1px solid #eee; 
+    padding: 20px; 
+    border-radius: 12px; 
+    margin-bottom: 30px; 
+    display: flex; 
+    gap: 40px;
+}
+
+.info-item{
+    border-left: 1px solid #ddd;
+    padding-left: 20px;
+}
+
+.info-item label {
+    display: block; 
+    font-size: 0.75rem; 
+    color: #888; 
+    text-transform: uppercase; 
+    font-weight: bold;
+}
+
+.info-item span {
+    font-size: 1.2rem; 
+    font-weight: bold;
+}
+
+.text-maroon { 
+    color: #800000; 
+}
+
+/* Table Elements */
+.student-id-badge { 
+    font-family: monospace; 
+    background: #f0f0f0; 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+    font-size: 0.9rem; 
+    color: #333; 
+    margin-right: 8px; 
+}
+
+.student-name { 
+    font-weight: bold; 
+    color: #800000; 
+}
+
+.table-select { 
+    padding: 6px; 
+    border-radius: 4px; 
+    border: 1px solid #ddd; 
+    cursor: pointer; 
 }
 
 /* BUTTONS */
@@ -299,43 +330,38 @@ body {
     display: inline-block; 
     font-size: 14px;
     transition: 0.3s;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .btn-primary { 
-    background-color: var(--primary-blue); 
+    background-color: var(--primary-maroon); 
     color: var(--white); 
 }
 
-.btn-primary:hover {
-    filter: brightness(1.2);
+.btn-primary:hover { 
+    filter: brightness(1.2); 
 }
 
 .btn-outline { 
-    border: 1.5px solid var(--primary-blue); 
-    color: var(--primary-blue); 
+    border: 1.5px solid var(--primary-maroon); 
+    color: var(--primary-maroon); 
     background: transparent;
 }
 
 .btn-outline:hover {
-    background-color: var(--primary-blue);
+    background-color: var(--primary-maroon);
     color: var(--white);
 }
 
 .btn-back {
-    background-color: #8B1E3F;
-    color: var(--white);
-}
-
-.btn-danger {
-    background-color: var(--danger-red);
-    color: var(--white);
+    background-color: #6c757d;
+    color: white;
 }
 
 .btn-danger-text {
     color: var(--danger-red);
     background: transparent;
-    font-weight: bold;
+    text-decoration: none;
 }
 
 /* FORM ELEMENTS */
@@ -351,26 +377,570 @@ input, select, textarea {
 
 input:focus, select:focus {
     outline: none;
-    border-color: var(--primary-blue);
+    border-color: var(--primary-maroon);
 }
 
-/* DASHBOARD STATS */
+/* EVENTS SECTION STYLING */
+/* Update this section in your style.css */
+.detail-section.full-width {
+    grid-column: 1 / -1; 
+    padding: 0 40px 40px 40px; /* Aligns with the 40px padding of the profile-details-grid */
+    margin-top: 0;
+}
+
+.event-tabs-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px; /* Match the gap used in the profile-details-grid */
+    background: transparent; /* Remove the dark background to align visually */
+    padding: 0; /* Remove internal padding so it starts exactly where the text above starts */
+}
+
+.section-title {
+    font-size: 1.1rem;
+    color: var(--primary-maroon);
+    border-bottom: 2px solid var(--light-gray);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    /* This ensures "Club Events" title looks exactly like "About the Club" */
+}
+
+/* Event Item Card */
+.event-item {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid transparent;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.event-item.upcoming {
+    border-left-color: var(--primary-maroon);
+}
+
+.event-item.past {
+    border-left-color: #6c757d;
+    opacity: 0.8;
+}
+
+/* Date Badge for Upcoming */
+.event-date-badge {
+    background: var(--primary-maroon);
+    color: white;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    min-width: 45px;
+    margin-right: 15px;
+}
+
+.event-date-badge .day {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.event-date-badge .month {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.event-info h5 {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    color: var(--text-dark);
+}
+
+.event-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.past-date {
+    font-style: italic;
+    font-size: 0.8rem !important;
+}
+
+.no-data {
+    font-size: 0.85rem;
+    color: #999;
+    font-style: italic;
+}
+
+/* Responsive Table/Grid */
+@media (max-width: 768px) {
+    .event-tabs-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* CLUB DETAILS SPECIFIC STYLES */
+
+.btn-back-link {
+    text-decoration: none;
+    color: var(--primary-maroon);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.btn-back-link:hover { opacity: 0.7; }
+
+/* --- Club Profile Header (Details Page) --- */
+.profile-main-box {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.profile-header-bg {
+    height: 120px;
+    background: linear-gradient(135deg, var(--primary-maroon), #5a1228);
+}
+
+.profile-content {
+    padding: 20px 40px; /* Aligns text with the rest of the page content */
+}
+
+
+.profile-info-main {
+    padding-bottom: 15px;
+}
+
+.title-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.title-status h2 {
+    margin: 0;
+    font-size: 2rem;
+    color: var(--text-dark);
+}
+
+.header-divider {
+    width: 80px; /* Small decorative line */
+    height: 4px;
+    background-color: var(--primary-maroon);
+    margin: 10px 0;
+    border-radius: 2px;
+}
+
+.advisor-name {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin-top: 5px;
+}
+
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.status-pill.active {
+    background: #d4edda;
+    color: #155724; 
+}
+
+.status-pill.inactive { 
+    background: #f8d7da; 
+    color: #721c24; 
+}
+
+/* Grid for Details */
+.profile-details-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 40px;
+    padding: 40px;
+}
+
+.detail-section h3 {
+    font-size: 1.1rem;
+    color: var(--primary-maroon);
+    border-bottom: 2px solid var(--light-gray);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.description-text {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    /* Limits description to 3 lines so cards stay neat */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Modern Table within details */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table th {
+    text-align: left;
+    font-size: 0.85rem;
+    color: #888;
+    padding-bottom: 10px;
+}
+
+.modern-table td {
+    padding: 12px 0;
+    border-top: 1px solid #eee;
+}
+
+.pos-badge {
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--primary-maroon);
+    font-weight: 600;
+}
+
+/* FOOTER ACTIONS */
+.profile-footer {
+    background: #f9f6f3;
+    padding: 25px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eee;
+}
+
+.btn-join {
+    background: var(--primary-maroon);
+    color: white;
+    padding: 14px 30px;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(139, 30, 63, 0.3);
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-manage, .btn-edit {
+    background: white;
+    border: 1.5px solid var(--primary-maroon);
+    color: var(--primary-maroon);
+}
+
+.btn-manage:hover, .btn-edit:hover {
+    background: var(--primary-maroon);
+    color: white;
+}
+
+.btn-delete {
+    background: transparent;
+    color: var(--danger-red);
+}
+
+.btn-delete:hover {
+    background: var(--danger-red);
+    color: white;
+}
+
+@media (max-width: 900px) {
+    .profile-details-grid { grid-template-columns: 1fr; }
+    .profile-content { flex-direction: column; align-items: center; text-align: center; }
+    .profile-footer { flex-direction: column; gap: 20px; }
+}
+
+/* ALIGNMENT FIX */
+.profile-info-main {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: flex-start; /* Align everything to the left */
+    gap: 0; 
+    padding-bottom: 10px;
+}
+
+.title-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* THE LINE - Same width/alignment as the text */
+.header-divider {
+    width: 100%;
+    max-width: 450px; /* Adjust this to how long you want the line to be */
+    height: 3px;
+    background-color: var(--primary-maroon);
+    margin: 10px 0; /* Creates space between Title and Advisor */
+    border-radius: 2px;
+}
+
+.advisor-name {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #5d5757;
+    text-align: left; /* Ensure text starts at the left */
+}
+
+
+
+/* --- LAYOUT RESET --- */
+.profile-card {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+}
+
+/* --- THE MAIN HEADER BOX --- */
+.profile-main-box {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid rgba(215, 183, 163, 0.3);
+}
+
+.about-container {
+    padding: 20px 40px 40px 40px;
+}
+
+/* --- THE SECTION BOXES (Committee & Events) --- */
+.profile-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr; /* Committee left, Events right */
+    gap: 25px;
+    padding: 0;
+}
+
+.detail-section {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid rgba(215, 183, 163, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+/* --- TITLES & LINES --- */
+.section-underline-title {
+    font-size: 1.1rem;
+    color: var(--primary-maroon);
+    border-bottom: 2px solid var(--light-gray);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+/* --- TABLE STYLING --- */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table th {
+    text-align: left;
+    font-size: 0.85rem;
+    color: #888;
+    padding-bottom: 10px;
+}
+
+.modern-table td {
+    padding: 12px 0;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+/* --- EVENT STYLING --- */
+.event-tabs-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.event-type-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 15px;
+}
+
+/* --- FOOTER BOX --- */
+.footer-action-row {
+    padding: 20px 40px;
+    display: flex;
+    justify-content: flex-start;
+}
+/* --- RESPONSIVE --- */
+@media (max-width: 1100px) {
+    .profile-details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/*ADD EDIT PAGE//
+/* Container for the form */
+.modern-form-card {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    max-width: 800px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Grid layout for organization */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 20px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1; /* Spans across both columns */
+}
+
+.form-group label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: #6d6d6d; /* Muted color so the input text stands out more */
+    margin-bottom: 6px;
+}
+
+.form-group input, 
+.form-group textarea, 
+.form-group select {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    border: 1.5px solid #e0d6ce; /* Softer border */
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+/* Style for the placeholder text */
+::placeholder {
+    color: #b5ada7;
+    font-style: italic;
+}
+
+.readonly-input {
+    background-color: #f5f5f5;
+    color: #888;
+}
+
+/* File upload styling */
+.file-upload-wrapper img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: white;
+}
+.file-hint {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 5px;
+}
+
+/* Bottom buttons */
+.form-actions {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.btn-cancel {
+    text-decoration: none;
+    color: #888;
+    font-weight: 500;
+}
+
+.btn-cancel:hover {
+    color: #333;
+}
+
+/* DASHBOARD LAYOUT */
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
 
 .summary-card {
-    background-color: var(--primary-blue);
-    color: var(--white);
-    padding: 30px;
-    border-radius: 10px;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(139, 30, 63, 0.2);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
+.summary-card h3 {
+    font-size: 2.2rem;
+    color: #800000;
+    margin: 0;
+}
 
+/* Chart Container Fixes */
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    height: 350px; /* Fixed height for consistency */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
+/* Specifically target the Pie Chart size */
+#statusPieChart {
+    max-width: 400px !important;
+    max-height: 400px !important;
+}
 
+/* Layout Positioning */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+/* Refresh Button Styling */
+.btn-refresh {
+    background-color: white;
+    color: #800000;
+    border: 2px solid #800000;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-refresh:hover {
+    background-color: #800000;
+    color: white;
+}
