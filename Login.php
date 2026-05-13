@@ -3,9 +3,11 @@
 
 <head>
 
-<title>Login</title>
+    <title>FK Management System</title>
 
-<link rel="stylesheet" href="styleLogin.css">
+    <link rel="stylesheet" href="StyleLogin.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 </head>
 
@@ -13,47 +15,56 @@
 
 <div class="main-container">
 
-<div class="left-panel">
+    <!-- LEFT PANEL -->
 
-<img src="images/Logo.png" class="logo-image">
+    <div class="left-panel">
 
-<p class="system-text">
-Empowering campus communities through smarter management.
-</p>
+        <img src="images/logo.png" class="logo-image">
 
-</div>
+        <p class="system-text">
+            Empowering campus communities through smarter management.
+        </p>
 
-<div class="right-panel">
+    </div>
 
-<div class="login-container">
+    <!-- RIGHT PANEL -->
 
-<h1 class="login-title">
-Welcome Back
-</h1>
+    <div class="right-panel">
 
-<p class="login-subtitle">
-Login to continue
-</p>
+        <div class="login-container">
 
-<form>
+            <h1 class="login-title">
+                Welcome Back
+            </h1>
 
-<input type="email"
-class="input-box"
-placeholder="Enter Email">
+            <p class="login-subtitle">
+                Login to continue
+            </p>
 
-<input type="password"
-class="input-box"
-placeholder="Enter Password">
+            <form>
 
-<button class="btn">
-Login
-</button>
+                <input type="email"
+                       class="input-box"
+                       placeholder="Enter Email"
+                       required>
 
-</form>
+                <input type="password"
+                       class="input-box"
+                       placeholder="Enter Password"
+                       required>
 
-</div>
+                <button type="submit"
+                        class="btn">
 
-</div>
+                    Login
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
 
 </div>
 
