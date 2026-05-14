@@ -1,40 +1,50 @@
 <?php
+// CRITICAL FIX: Session must be started FIRST.
 session_start();
 require_once 'db.php';
 
-/*Role Check*/
+/* Role Check */
+// Only Admins are allowed to perform the delete action.
 if (!isset($_SESSION['UserRole']) || $_SESSION['UserRole'] !== 'Admin') {
-    // If NOT an admin, redirect back to the club list quietly.
-    // This is how you avoid that white page with text.
+    // Redirect quietly to avoid "Unauthorized access" text pages.
     header("Location: ClubList.php");
     exit();
 }
 
-$clubID = $_GET['id'] ?? null;
+// Get ID from URL and sanitize it for MySQLi to prevent SQL injection.
+$clubID = isset($_GET['id']) ? mysqli_real_escape_string($conn, $_GET['id']) : null;
 
 if ($clubID) {
-    try {
-        $pdo->beginTransaction();
+    // Start Transaction in MySQLi to ensure data integrity.
+    mysqli_begin_transaction($conn);
 
-        //Delete related data 
-        $pdo->prepare("DELETE FROM membership WHERE ClubID = ?")->execute([$clubID]);
-        $pdo->prepare("DELETE FROM event WHERE ClubID = ?")->execute([$clubID]);
-        //Delete the Club itself
-        $pdo->prepare("DELETE FROM club WHERE ClubID = ?")->execute([$clubID]);
-        $pdo->commit();
-        
-        // 6. Seamless Automatic Redirect
+    try {
+        // Delete all memberships
+        $sqlDeleteMembers = "DELETE FROM membership WHERE ClubID = '$clubID'";
+        mysqli_query($conn, $sqlDeleteMembers);
+
+        // Delete all events 
+        $sqlDeleteEvents = "DELETE FROM event WHERE ClubID = '$clubID'";
+        mysqli_query($conn, $sqlDeleteEvents);
+
+        //delete club
+        $sqlDeleteClub = "DELETE FROM club WHERE ClubID = '$clubID'";
+        mysqli_query($conn, $sqlDeleteClub);
+
+        mysqli_commit($conn);
+
         header("Location: ClubList.php?msg=deleted");
         exit();
 
     } catch (Exception $e) {
-        $pdo->rollBack();
-        // Go back with an error code if something fails
+        // If any step fails, undo all deletions.
+        mysqli_rollback($conn);
         header("Location: ClubList.php?error=db");
         exit();
     }
 } else {
-    // No ID found? Just go back.
+    // No ID found in the URL? Redirect back to the list.
     header("Location: ClubList.php");
     exit();
 }
+?>

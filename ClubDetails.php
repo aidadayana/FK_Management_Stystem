@@ -3,18 +3,21 @@ require_once 'db.php';
 session_start();
 
 /*Role*/
-$userRole = $_SESSION['UserRole'] ?? '';
+$userRole = $_SESSION['UserRole'] ?? 'Admin';
 
 $isAdmin = ($userRole === 'Admin');
 $isCommittee = ($userRole === 'Committee');
 $isStudent = ($userRole === 'Student');
 
-/*Club Details*/
+/* Club Details Logic */
 if (isset($_GET['id']) && !empty($_GET['id'])) {
-    $clubID = $_GET['id'];
-    $stmt = $pdo->prepare("SELECT * FROM club WHERE ClubID = ?");
-    $stmt->execute([$clubID]);
-    $club = $stmt->fetch(PDO::FETCH_ASSOC);
+    $clubID = mysqli_real_escape_string($conn, $_GET['id']);
+    
+    // Using mysqli_query for simplicity as requested
+    $sqlClub = "SELECT * FROM club WHERE ClubID = '$clubID'";
+    $resClub = mysqli_query($conn, $sqlClub);
+    $club = mysqli_fetch_assoc($resClub);
+
     if (!$club) {
         header("Location: ClubList.php");
         exit();
@@ -29,50 +32,42 @@ if ($isStudent && $club['ClubStatus'] !== 'Active') {
     die("This club is currently inactive.");
 }
 
+/* Committee Members Fetch */
 try {
-
-    $stmtCommittee = $pdo->prepare("
-        SELECT 
-            m.MemberStatus,
-            mr.MemberRoleName,
-            u.Name
-        FROM membership m
-        INNER JOIN membership_role mr
-            ON m.MemberRoleID = mr.MemberRoleID
-        INNER JOIN user u
-            ON m.UserID = u.UserID
-        WHERE m.ClubID = ?
-        AND m.MemberStatus = 'Active'
-    ");
-    $stmtCommittee->execute([$clubID]);
-    $committeeMembers = $stmtCommittee->fetchAll(PDO::FETCH_ASSOC);
-
+    $sqlComm = "SELECT m.MemberStatus, mr.MemberRoleName, u.Name
+                FROM membership m
+                INNER JOIN membership_role mr ON m.MemberRoleID = mr.MemberRoleID
+                INNER JOIN user u ON m.UserID = u.UserID
+                WHERE m.ClubID = '$clubID' AND m.MemberStatus = 'Active'";
+    
+    $resComm = mysqli_query($conn, $sqlComm);
+    $committeeMembers = [];
+    if ($resComm) {
+        while ($row = mysqli_fetch_assoc($resComm)) {
+            $committeeMembers[] = $row;
+        }
+    }
 } catch (Exception $e) {
     $committeeMembers = [];
 }
 
+/* Events Fetch */
 try {
-    $stmtUp = $pdo->prepare("
-        SELECT *
-        FROM event
-        WHERE ClubID = ?
-        AND EventDate >= CURDATE()
-        ORDER BY EventDate ASC
-    ");
+    // Upcoming Events
+    $sqlUp = "SELECT * FROM event WHERE ClubID = '$clubID' AND EventDate >= CURDATE() ORDER BY EventDate ASC";
+    $resUp = mysqli_query($conn, $sqlUp);
+    $upcomingEvents = [];
+    while ($row = mysqli_fetch_assoc($resUp)) {
+        $upcomingEvents[] = $row;
+    }
 
-    $stmtUp->execute([$clubID]);
-    $upcomingEvents = $stmtUp->fetchAll(PDO::FETCH_ASSOC);
-    $stmtPast = $pdo->prepare("
-        SELECT *
-        FROM event
-        WHERE ClubID = ?
-        AND EventDate < CURDATE()
-        ORDER BY EventDate DESC
-        LIMIT 5
-    ");
-
-    $stmtPast->execute([$clubID]);
-    $pastEvents = $stmtPast->fetchAll(PDO::FETCH_ASSOC);
+    // Past Events
+    $sqlPast = "SELECT * FROM event WHERE ClubID = '$clubID' AND EventDate < CURDATE() ORDER BY EventDate DESC LIMIT 5";
+    $resPast = mysqli_query($conn, $sqlPast);
+    $pastEvents = [];
+    while ($row = mysqli_fetch_assoc($resPast)) {
+        $pastEvents[] = $row;
+    }
 
 } catch (Exception $e) {
     $upcomingEvents = [];

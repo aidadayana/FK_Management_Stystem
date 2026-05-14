@@ -1,22 +1,35 @@
 <?php
+session_start(); 
 require_once 'db.php';
 
-// 1. Fetch Summary Totals from Database
-$totalClubs = $pdo->query("SELECT COUNT(*) FROM club")->fetchColumn();
-$activeClubs = $pdo->query("SELECT COUNT(*) FROM club WHERE ClubStatus = 'Active'")->fetchColumn();
-// Ensure 'Student' matches your RoleID column exactly in the user table
-$totalStudents = $pdo->query("SELECT COUNT(DISTINCT UserID) FROM user WHERE RoleID = 'Student'")->fetchColumn();
+//get Total Clubs
+$resTotal = mysqli_query($conn, "SELECT COUNT(*) as count FROM club");
+$totalClubs = mysqli_fetch_assoc($resTotal)['count'];
 
-// 2. Fetch Member Stats for Bar Chart
-$memberStats = $pdo->query("
+//get Active Clubs
+$resActive = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
+$activeClubs = mysqli_fetch_assoc($resActive)['count'];
+
+//get Total Students
+$resStudents = mysqli_query($conn, "SELECT COUNT(DISTINCT UserID) as count FROM user WHERE RoleID = 'Student'");
+$totalStudents = mysqli_fetch_assoc($resStudents)['count'];
+
+//student Bar Chart
+$memberStatsQuery = "
     SELECT c.ClubName, COUNT(m.UserID) as member_count 
     FROM club c 
     LEFT JOIN membership m ON c.ClubID = m.ClubID 
     GROUP BY c.ClubID
-")->fetchAll();
+";
+$resStats = mysqli_query($conn, $memberStatsQuery);
 
-$clubNames = array_column($memberStats, 'ClubName');
-$counts = array_column($memberStats, 'member_count');
+$clubNames = [];
+$counts = [];
+
+while ($row = mysqli_fetch_assoc($resStats)) {
+    $clubNames[] = $row['ClubName'];
+    $counts[] = $row['member_count'];
+}
 ?>
 
 <!DOCTYPE html>

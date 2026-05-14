@@ -1,33 +1,42 @@
 <?php
 require_once 'db.php';
+session_start();
 
 $clubID = $_GET['id'] ?? '';
-if (!$clubID) { header("Location: ClubList.php"); exit(); }
+if (!$clubID) { 
+    header("Location: ClubList.php"); 
+    exit(); 
+}
 
-// Fetch Club and Advisor Details
-$stmt = $pdo->prepare("SELECT * FROM club WHERE ClubID = ?");
-$stmt->execute([$clubID]);
-$club = $stmt->fetch();
+$safeClubID = mysqli_real_escape_string($conn, $clubID);
+$sqlClub = "SELECT * FROM club WHERE ClubID = '$safeClubID'";
+$resClub = mysqli_query($conn, $sqlClub);
+$club = mysqli_fetch_assoc($resClub);
 
-if (!$club) { die("Club not found."); }
+if (!$club) { 
+    die("Club not found."); 
+}
 
-// Fetch Roles and Committee Members
-$roles = $pdo->query("SELECT * FROM membership_role ORDER BY MemberRoleID ASC")->fetchAll();
-$stmt_comm = $pdo->prepare("
-    SELECT m.*, r.MemberRoleName, u.Name 
-    FROM membership m 
-    JOIN membership_role r ON m.MemberRoleID = r.MemberRoleID 
-    JOIN user u ON m.UserID = u.UserID 
-    WHERE m.ClubID = ?
-    ORDER BY r.MemberRoleID ASC
-");
-$stmt_comm->execute([$clubID]);
-$members = $stmt_comm->fetchAll();
+//get roles
+$resRoles = mysqli_query($conn, "SELECT * FROM membership_role ORDER BY MemberRoleID ASC");
+$roles = [];
+while ($row = mysqli_fetch_assoc($resRoles)) {
+    $roles[] = $row;
+}
 
-// Fetch Events
-$stmt_event = $pdo->prepare("SELECT * FROM event WHERE ClubID = ? ORDER BY EventDate DESC");
-$stmt_event->execute([$clubID]);
-$events = $stmt_event->fetchAll();
+//get committee
+$sqlComm = "SELECT m.*, r.MemberRoleName, u.Name 
+            FROM membership m 
+            JOIN membership_role r ON m.MemberRoleID = r.MemberRoleID 
+            JOIN user u ON m.UserID = u.UserID 
+            WHERE m.ClubID = '$safeClubID'
+            ORDER BY r.MemberRoleID ASC";
+
+$resComm = mysqli_query($conn, $sqlComm);
+$members = [];
+while ($row = mysqli_fetch_assoc($resComm)) {
+    $members[] = $row;
+}
 ?>
 
 <!DOCTYPE html>

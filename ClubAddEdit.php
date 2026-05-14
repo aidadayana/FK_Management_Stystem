@@ -1,50 +1,54 @@
 <?php
 require_once 'db.php';
+session_start();
 
 $isEdit = false;
 $clubID = $name = $desc = $advisor = "";
 $status = "Active";
-$existingLogo = "default_club.png";
 
+//fetch existing data for Edit mode
 if (isset($_GET['id'])) {
     $isEdit = true;
-    $clubID = $_GET['id'];
-    $stmt = $pdo->prepare("SELECT * FROM club WHERE ClubID = ?");
-    $stmt->execute([$clubID]);
-    $row = $stmt->fetch();
+    $clubID = mysqli_real_escape_string($conn, $_GET['id']);
+    
+    $sql = "SELECT * FROM club WHERE ClubID = '$clubID'";
+    $result = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($result);
 
     if ($row) {
-        $name = $row['ClubName'];
-        $desc = $row['ClubDesc'];
+        $name    = $row['ClubName'];
+        $desc    = $row['ClubDesc'];
         $advisor = $row['ClubAdvisor'];
-        $status = $row['ClubStatus'];
-        $existingLogo = !empty($row['logo']) ? $row['logo'] : "default_club.png";
+        $status  = $row['ClubStatus'];
     }
 }
 
+// 2. Handle POST request to Save or Update
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $formID      = $_POST['club_id'];
-    $formName    = $_POST['club_name'];
-    $formDesc    = $_POST['club_desc'];
-    $formAdvisor = $_POST['club_advisor'];
-    $formStatus  = $_POST['club_status'];
+    $formID      = mysqli_real_escape_string($conn, $_POST['club_id']);
+    $formName    = mysqli_real_escape_string($conn, $_POST['club_name']);
+    $formDesc    = mysqli_real_escape_string($conn, $_POST['club_desc']);
+    $formAdvisor = mysqli_real_escape_string($conn, $_POST['club_advisor']);
+    $formStatus  = mysqli_real_escape_string($conn, $_POST['club_status']);
     
-    // LOGO LOGIC REMOVED COMPLETELY
-
     if ($isEdit) {
-        // Removed logo=? from query
-        $sql = "UPDATE club SET ClubName=?, ClubDesc=?, ClubAdvisor=?, ClubStatus=? WHERE ClubID=?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$formName, $formDesc, $formAdvisor, $formStatus, $formID]);
+        $sql = "UPDATE club SET 
+                ClubName = '$formName', 
+                ClubDesc = '$formDesc', 
+                ClubAdvisor = '$formAdvisor', 
+                ClubStatus = '$formStatus' 
+                WHERE ClubID = '$formID'";
     } else {
-        // Removed logo from columns and values
-        $sql = "INSERT INTO club (ClubID, ClubName, ClubDesc, ClubAdvisor, ClubStatus) VALUES (?, ?, ?, ?, ?)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$formID, $formName, $formDesc, $formAdvisor, $formStatus]);
+        $sql = "INSERT INTO club (ClubID, ClubName, ClubDesc, ClubAdvisor, ClubStatus) 
+                VALUES ('$formID', '$formName', '$formDesc', '$formAdvisor', '$formStatus')";
     }
 
-    header("Location: ClubList.php");
-    exit();
+    if (mysqli_query($conn, $sql)) {
+        header("Location: ClubList.php");
+        exit();
+    } else {
+        echo "Error: " . mysqli_error($conn);
+    }
 }
 ?>
 

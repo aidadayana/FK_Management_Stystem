@@ -20,11 +20,13 @@ body {
 
 /* SIDEBAR NAVIGATION */
 .sidebar {
-    width: var(--sidebar-width);
+    width: 250px;
     height: 100vh;
     background-color: var(--white);
     border-right: 1px solid var(--border-color);
     position: fixed;
+    left: 0;
+    top: 0;
     padding: 20px;
     box-sizing: border-box;
     z-index: 100;
@@ -64,22 +66,21 @@ body {
 
 /* MAIN LAYOUT */
 .main-content {
-    margin-left: var(--sidebar-width);
-    padding: 40px;
-    width: calc(100% - var(--sidebar-width));
+    margin-left: 50px;
+    padding: 30px 30px;
+    width: calc(100% - 290px);
     min-height: 100vh;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column; 
     box-sizing: border-box;
+    display: block;
 }
 
-.header-row { 
+.header-row {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    margin-bottom: 25px; 
-    padding: 0
+    margin-bottom: 25px;
+    padding: 0;
 }
 
 .club-subtitle {
@@ -787,15 +788,14 @@ input:focus, select:focus {
     display: flex;
     justify-content: flex-start;
 }
-/* --- RESPONSIVE --- */
+
 @media (max-width: 1100px) {
     .profile-details-grid {
         grid-template-columns: 1fr;
     }
 }
 
-/*ADD EDIT PAGE//
-/* Container for the form */
+/* ADD EDIT */
 .modern-form-card {
     background: white;
     padding: 40px;
@@ -893,7 +893,14 @@ input:focus, select:focus {
     padding: 25px;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-top: 5px solid #8B1E3F;
+    transition: 0.3s;
+}
+
+.summary-card:hover {
+    transform: translateY(-5px);
+    border-top: 5px solid #F3EC36;
 }
 
 .summary-card h3 {

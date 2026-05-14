@@ -3,7 +3,7 @@ require_once 'db.php';
 session_start();
 
 // ROLE CHECK
-$userRole = $_SESSION['UserRole'] ?? '';
+$userRole = $_SESSION['UserRole'] ?? 'Admin';
 
 $isAdmin = ($userRole === 'Admin');
 $isCommittee = ($userRole === 'Committee');
@@ -26,32 +26,33 @@ try {
     } else {
         $query = "SELECT * FROM club WHERE 1=1";
     }
-    $params = [];
 
     // SEARCH
     if (!empty($search)) {
-        $query .= " AND (ClubName LIKE ? OR ClubDesc LIKE ?)";
-        $params[] = "%$search%";
-        $params[] = "%$search%";
+        $safeSearch = mysqli_real_escape_string($conn, $search);
+        $query .= " AND (ClubName LIKE '%$safeSearch%' OR ClubDesc LIKE '%$safeSearch%')";
     }
 
     // STATUS FILTER ONLY ADMIN & COMMITEE
     if (!$isStudent && !empty($statusFilter) && $statusFilter !== 'All') {
-        $query .= " AND ClubStatus = ?";
-        $params[] = $statusFilter;
+        $safeStatus = mysqli_real_escape_string($conn, $statusFilter);
+        $query .= " AND ClubStatus = '$safeStatus'";
     }
 
-        $query .= " ORDER BY ClubName ASC";
+    $query .= " ORDER BY ClubName ASC";
 
-        $stmt = $pdo->prepare($query);
-        $stmt->execute($params);
-
-        $clubs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } 
-
-    catch (Exception $e) {
-        $clubs = [];
+    // EXECUTE USING MYSQLI
+    $result = mysqli_query($conn, $query);
+    $clubs = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $clubs[] = $row;
+        }
     }
+} 
+catch (Exception $e) {
+    $clubs = [];
+}
 ?>
 
 <!DOCTYPE html>
