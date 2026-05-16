@@ -1,46 +1,59 @@
+<?php
+session_start();
+require_once 'db.php';
+
+if(!isset($_SESSION['UserID']))
+{
+    header("Location: login.php");
+    exit();
+}
+
+if($_SESSION['RoleID'] != 'R01')
+{
+    header("Location: login.php");
+    exit();
+}
+
+/* GET USERS */
+$sql = "SELECT UserID, Name, MatricNo, Email, RoleID FROM user";
+$result = mysqli_query($conn, $sql);
+?>
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>User Management</title>
-    <link rel="stylesheet" href="styleAdmin.css">
+
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-<?php include('AdminNavigation.php'); ?>
+<?php include('Navigation.php'); ?>
 
+<div class="main-content">
 
-<div class="dashboard-container">
+    <!-- HEADER -->
+    <div class="header-row">
+        <h1>USER MANAGEMENT</h1>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-
-        <div class="sidebar-logo">
-            <img src="images/logo.png">
-            <h2>FK Management</h2>
-        </div>
-
-        <ul class="menu">
-            <li><a href="admin_dashboard.html">Dashboard</a></li>
-            <li><a href="#" class="active">User Management</a></li>
-            <li><a href="profile.html">Profile</a></li>
-            <li><a href="login.html">Logout</a></li>
-        </ul>
-
+        <a href="add_user.php" class="btn btn-primary">
+            + Add User
+        </a>
     </div>
 
-    <!-- CONTENT -->
-    <div class="dashboard-content">
+    <p class="club-subtitle">
+        Manage all registered users in the system
+    </p>
 
-        <div class="dashboard-header">
-            <h1>User Management</h1>
-            <p>Manage all registered users in the system</p>
-        </div>
+    <!-- TABLE BOX -->
+    <div class="info-table-container">
 
-        <!-- TABLE SECTION -->
-        <div class="table-section">
+        <table class="management-table">
 
-            <table class="user-table">
+            <thead>
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
@@ -49,28 +62,33 @@
                     <th>Role</th>
                     <th>Action</th>
                 </tr>
+            </thead>
+
+            <tbody>
+
+                <?php while($row = mysqli_fetch_assoc($result)) { ?>
 
                 <tr>
-                    <td>1</td>
-                    <td>Aina Nasuha</td>
-                    <td>AA12345</td>
-                    <td>aina@email.com</td>
-                    <td>Student</td>
-                    <td><button class="btn">Edit</button></td>
+                    <td><?php echo $row['UserID']; ?></td>
+                    <td><?php echo $row['Name']; ?></td>
+                    <td><?php echo $row['MatricNo']; ?></td>
+                    <td><?php echo $row['Email']; ?></td>
+                    <td>
+                        <span class="status-badge status-active">
+                            <?php echo $row['RoleID']; ?>
+                        </span>
+                    </td>
+                    <td>
+                        <a href="edit_user.php?id=<?php echo $row['UserID']; ?>" class="btn btn-outline">Edit</a>
+                        <a href="delete_user.php?id=<?php echo $row['UserID']; ?>" class="btn btn-danger-text">Delete</a>
+                    </td>
                 </tr>
 
-                <tr>
-                    <td>2</td>
-                    <td>John Doe</td>
-                    <td>BB54321</td>
-                    <td>john@email.com</td>
-                    <td>Club Admin</td>
-                    <td><button class="btn">Edit</button></td>
-                </tr>
+                <?php } ?>
 
-            </table>
+            </tbody>
 
-        </div>
+        </table>
 
     </div>
 

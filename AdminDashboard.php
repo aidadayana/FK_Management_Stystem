@@ -1,6 +1,6 @@
 <?php
-
 session_start();
+require_once 'db.php';
 
 if(!isset($_SESSION['UserID']))
 {
@@ -17,97 +17,108 @@ if($_SESSION['RoleID'] != 'R01')
 ?>
 
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-<title>Admin Dashboard</title>
-
-<link rel="stylesheet" href="styleAdmin.css">
-
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-<div class="dashboard-container">
+<?php include('Navigation.php'); ?>
 
-    <div class="sidebar">
+<div class="main-content">
 
-        <div class="sidebar-logo">
+    <!-- HEADER -->
+    <div class="header-row">
+        <h1>ADMIN DASHBOARD</h1>
 
-            <img src="images/logo.png">
+        <button onclick="refreshData()" class="btn btn-primary">
+            🔄 Refresh Data
+        </button>
+    </div>
 
-            <h2>FK Management</h2>
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
 
+        <div class="summary-card">
+            <h3><?php echo $totalStudents; ?></h3>
+            <p>Total Students</p>
         </div>
 
-        <ul class="menu">
+        <div class="summary-card">
+            <h3><?php echo $totalClubs; ?></h3>
+            <p>Total Clubs</p>
+        </div>
 
-            <li><a href="AdminDashboard.php" class="active">Dashboard</a></li>
+        <div class="summary-card">
+            <h3><?php echo $totalEvents; ?></h3>
+            <p>Upcoming Events</p>
+        </div>
 
-            <li><a href="#">User Management</a></li>
-
-            <li><a href="#">Profile</a></li>
-
-            <li><a href="logout.php">Logout</a></li>
-
-        </ul>
+        <div class="summary-card">
+            <h3><?php echo $newUsers; ?></h3>
+            <p>New Users (7 Days)</p>
+        </div>
 
     </div>
 
-    <div class="dashboard-content">
+    <!-- CHART SECTION -->
+    <div class="header-row">
+        <h3>System Overview</h3>
+    </div>
 
-        <div class="dashboard-header">
+    <div class="summary-grid">
 
-            <h1>Admin Dashboard</h1>
-
-            <p>
-                Welcome,
-                <?php echo $_SESSION['Name']; ?>
-            </p>
-
-        </div>
-
-        <div class="card-container">
-
-            <div class="dashboard-card">
-
-                <h3>Total Students</h3>
-
-                <p>120</p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <h3>Total Clubs</h3>
-
-                <p>15</p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <h3>Upcoming Events</h3>
-
-                <p>8</p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <h3>New Users</h3>
-
-                <p>12</p>
-
-            </div>
-
+        <div class="chart-container">
+            <canvas id="roleChart"></canvas>
         </div>
 
     </div>
 
 </div>
 
-</body>
+<script>
+function refreshData() {
+    window.location.reload();
+}
 
+/* BAR CHART */
+const ctx = document.getElementById('roleChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: <?php echo json_encode($roles); ?>,
+        datasets: [{
+            label: 'Users by Role',
+            data: <?php echo json_encode($roleCounts); ?>,
+            backgroundColor: '#800000'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'User Role Distribution'
+            },
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+</script>
+
+</body>
 </html>
