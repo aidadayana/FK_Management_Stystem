@@ -3,7 +3,7 @@ require_once 'db.php';
 session_start();
 
 // ROLE CHECK
-$userRole = $_SESSION['UserRole'] ?? 'Admin';
+$userRole = $_SESSION['UserRole'] ?? '';
 
 $isAdmin = ($userRole === 'Admin');
 $isCommittee = ($userRole === 'Committee');
