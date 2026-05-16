@@ -64,6 +64,8 @@ body {
     box-shadow: 0 4px 10px rgba(139, 30, 63, 0.2); 
 }
 
+
+
 /* MAIN LAYOUT */
 .main-content {
     margin-left: 50px;
@@ -297,6 +299,7 @@ body {
 .text-maroon { 
     color: #800000; 
 }
+
 
 
 .student-name { 
@@ -975,4 +978,18 @@ input:focus, select:focus {
     color: white;
 }
 
-
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #28a745; /* Success Green */
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-weight: bold;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    transform: translateY(0);
+}

@@ -17,7 +17,7 @@ if (mysqli_num_rows($checkResult) > 0) {
 } else {
     // STEP 2: Proceed with the join
     $insertQuery = "INSERT INTO membership (UserID, ClubID, MemberRoleID, JoinDate, MemberStatus) 
-                    VALUES ('$userID', '$clubID', 'R005', '$today', 'Active')";
+                    VALUES ('$userID', '$clubID', 'R006', '$today', 'Active')";
     
     if (mysqli_query($conn, $insertQuery)) {
         echo "<script>alert('Successfully joined the club!'); window.location.href='ClubList.php';</script>";

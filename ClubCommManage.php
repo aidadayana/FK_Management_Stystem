@@ -52,7 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action_type']) && $_P
 
     $updateSql = "UPDATE membership SET MemberRoleID = '$newRoleID' WHERE MemberID = '$memberID' AND ClubID = '$safeClubID'";
     if (mysqli_query($conn, $updateSql)) {
-        header("Location: ClubCommManage.php?id=" . $safeClubID . "&msg=Position+updated+successfully");
+        // Store the message in a session variable instead of the URL
+        $_SESSION['flash_msg'] = "Position updated successfully";
+        header("Location: ClubCommManage.php?id=" . $safeClubID);
         exit();
     }
 }
@@ -126,10 +128,21 @@ if ($resJoined) {
             </div>
         </div>
 
-        <?php if (isset($_GET['msg'])): ?>
-            <div class="alert alert-success">
-                <?php echo htmlspecialchars($_GET['msg']); ?>
+        <?php if (isset($_SESSION['flash_msg'])): ?>
+            <div id="toast-box" class="toast-notification">
+                <?php echo htmlspecialchars($_SESSION['flash_msg']); unset($_SESSION['flash_msg']); ?>
             </div>
+
+            <script>
+            setTimeout(() => {
+                const toast = document.getElementById('toast-box');
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(20px)'; // Slides down slightly while fading
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 2000); // Displays for sekejap (2 seconds)
+            </script>
         <?php endif; ?>
 
         <div class="management-split">
