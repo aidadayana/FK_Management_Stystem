@@ -2,25 +2,60 @@
 session_start();
 require_once 'db.php';
 
+/* LOGIN CHECK */
 if(!isset($_SESSION['UserID']))
 {
     header("Location: login.php");
     exit();
 }
 
+/* ROLE CHECK (ADMIN ONLY) */
 if($_SESSION['RoleID'] != 'R01')
 {
     header("Location: login.php");
     exit();
 }
 
+/* =========================
+   DATABASE QUERIES
+========================= */
+
+/* TOTAL STUDENTS (R02) */
+$resStudents = mysqli_query($conn, "SELECT COUNT(*) as count FROM user WHERE RoleID = 'R02'");
+$totalStudents = mysqli_fetch_assoc($resStudents)['count'];
+
+/* TOTAL CLUBS */
+$resClubs = mysqli_query($conn, "SELECT COUNT(*) as count FROM club");
+$totalClubs = mysqli_fetch_assoc($resClubs)['count'];
+
+/* TOTAL EVENTS */
+$resEvents = mysqli_query($conn, "SELECT COUNT(*) as count FROM event");
+$totalEvents = mysqli_fetch_assoc($resEvents)['count'];
+
+/* NEW USERS (LAST 7 DAYS - simple version) */
+$resNew = mysqli_query($conn, "SELECT COUNT(*) as count FROM user");
+$newUsers = mysqli_fetch_assoc($resNew)['count'];
+
+/* ROLE DISTRIBUTION */
+$resRole = mysqli_query($conn, "SELECT RoleID, COUNT(*) as count FROM user GROUP BY RoleID");
+
+$roles = [];
+$roleCounts = [];
+
+while($row = mysqli_fetch_assoc($resRole))
+{
+    $roles[] = $row['RoleID'];
+    $roleCounts[] = $row['count'];
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
+
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -55,12 +90,12 @@ if($_SESSION['RoleID'] != 'R01')
 
         <div class="summary-card">
             <h3><?php echo $totalEvents; ?></h3>
-            <p>Upcoming Events</p>
+            <p>Total Events</p>
         </div>
 
         <div class="summary-card">
             <h3><?php echo $newUsers; ?></h3>
-            <p>New Users (7 Days)</p>
+            <p>Total Users</p>
         </div>
 
     </div>
@@ -81,11 +116,12 @@ if($_SESSION['RoleID'] != 'R01')
 </div>
 
 <script>
-function refreshData() {
+function refreshData()
+{
     window.location.reload();
 }
 
-/* BAR CHART */
+/* ROLE CHART */
 const ctx = document.getElementById('roleChart').getContext('2d');
 
 new Chart(ctx, {
