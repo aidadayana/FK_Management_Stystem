@@ -23,11 +23,17 @@ if($_SESSION['RoleID'] != 'R02')
 
 <title>Student Dashboard</title>
 
-<link rel="stylesheet" href="styleAdmin.css">
+<link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
+<?php
+
+
+include('Navigation.php');
+
+?>
 
 <div class="dashboard-container">
 
