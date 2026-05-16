@@ -56,7 +56,7 @@ $result = mysqli_query($conn, $sql);
 
         <h1>USER MANAGEMENT</h1>
 
-        <a href="register_user.php"
+        <a href="RegisterUser.php"
            class="btn btn-primary">
 
             + Add User
