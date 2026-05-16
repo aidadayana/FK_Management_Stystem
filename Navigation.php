@@ -29,6 +29,10 @@ if(!isset($_SESSION['UserID']))
             <li>
                 <a href="Reports.php">Reports</a>
             </li>
+            
+            <li>
+                <a href="ClubList.php">Club</a>
+            </li>
 
         <?php } ?>
 
