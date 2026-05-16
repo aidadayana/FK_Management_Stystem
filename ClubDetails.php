@@ -4,7 +4,7 @@ session_start();
 
 $currentUserID = $_SESSION['UserID'] ?? '';
 
-/* 1. Club Details Logic FIRST (Defines $clubID safely) */
+/* 1. Club Details Logic FIRST */
 if (isset($_GET['id']) && !empty($_GET['id'])) {
     $clubID = mysqli_real_escape_string($conn, $_GET['id']);
     $sqlClub = "SELECT * FROM club WHERE ClubID = '$clubID'";
@@ -20,10 +20,7 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     exit();
 }
 
-/* 2. SYSTEM ROLE & MEMBERSHIP LOOKUP 
-      Since $_SESSION['UserRole'] is NOT SET, we look up the user's base system role 
-      and their club-specific membership status directly from the tables.
-*/
+/* 2. SYSTEM ROLE & MEMBERSHIP LOOKUP */
 $isAdmin = false;
 $isStudent = false;
 $isCommittee = false;
@@ -47,6 +44,7 @@ if (!empty($currentUserID)) {
                  FROM membership m 
                  JOIN membership_role r ON m.MemberRoleID = r.MemberRoleID 
                  WHERE m.UserID = '$currentUserID' AND m.ClubID = '$clubID' AND m.MemberStatus = 'Active'";
+
     $resCheck = mysqli_query($conn, $sqlCheck);
     if ($rowM = mysqli_fetch_assoc($resCheck)) {
         $isAlreadyMember = true;
@@ -59,13 +57,15 @@ if ($isStudent && $club['ClubStatus'] !== 'Active') {
     die("This club is currently inactive.");
 }
 
-/* Committee Members Table Fetch */
+/* Committee Members Table Fetch (Excluding Standard General Members) */
 try {
     $sqlComm = "SELECT m.MemberStatus, mr.MemberRoleName, u.Name
                 FROM membership m
                 INNER JOIN membership_role mr ON m.MemberRoleID = mr.MemberRoleID
                 INNER JOIN user u ON m.UserID = u.UserID
-                WHERE m.ClubID = '$clubID' AND m.MemberStatus = 'Active'";
+                WHERE m.ClubID = '$clubID' 
+                AND m.MemberStatus = 'Active' 
+                AND mr.MemberRoleName != 'General Member'";
     
     $resComm = mysqli_query($conn, $sqlComm);
     $committeeMembers = [];
@@ -80,7 +80,6 @@ try {
 
 /* Events Fetch */
 try {
-    // Upcoming Events
     $sqlUp = "SELECT * FROM event WHERE ClubID = '$clubID' AND EventDate >= CURDATE() ORDER BY EventDate ASC";
     $resUp = mysqli_query($conn, $sqlUp);
     $upcomingEvents = [];
@@ -88,14 +87,12 @@ try {
         $upcomingEvents[] = $row;
     }
 
-    // Past Events
     $sqlPast = "SELECT * FROM event WHERE ClubID = '$clubID' AND EventDate < CURDATE() ORDER BY EventDate DESC LIMIT 5";
     $resPast = mysqli_query($conn, $sqlPast);
     $pastEvents = [];
     while ($row = mysqli_fetch_assoc($resPast)) {
         $pastEvents[] = $row;
     }
-
 } catch (Exception $e) {
     $upcomingEvents = [];
     $pastEvents = [];
@@ -223,7 +220,7 @@ try {
                     <a href="ClubDelete.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-delete" onclick="return confirm('WARNING: Are you sure you want to delete this club?')">Delete Club</a>
                 <?php endif; ?>
 
-                <?php if ($isCommittee && $isAlreadyMember): ?>
+                <?php if ($isCommittee): ?>
                     <a href="ClubCommManage.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-manage">Manage Events</a>
                 <?php endif; ?>
             </div>

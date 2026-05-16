@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 16, 2026 at 10:36 AM
+-- Generation Time: May 16, 2026 at 08:03 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -41,7 +41,7 @@ CREATE TABLE `club` (
 
 INSERT INTO `club` (`ClubID`, `ClubName`, `ClubDesc`, `ClubAdvisor`, `ClubStatus`) VALUES
 ('C003', '3D modelling', 'Design 3D Modelling', 'Aisy', 'Active'),
-('E002', 'HCI', 'HumanComputer', 'Audi', 'Inactive');
+('E002', 'HCI', 'HumanComputer', 'Audi', 'Active');
 
 -- --------------------------------------------------------
 
@@ -82,13 +82,20 @@ CREATE TABLE `event_registration` (
 --
 
 CREATE TABLE `membership` (
-  `MemberID` varchar(50) NOT NULL,
+  `MemberID` int(11) NOT NULL,
   `UserID` varchar(50) NOT NULL,
   `ClubID` varchar(50) NOT NULL,
   `MemberRoleID` varchar(50) NOT NULL,
   `JoinDate` date NOT NULL,
   `MemberStatus` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `membership`
+--
+
+INSERT INTO `membership` (`MemberID`, `UserID`, `ClubID`, `MemberRoleID`, `JoinDate`, `MemberStatus`) VALUES
+(1, 'U003', 'E002', 'R001', '2026-05-17', 'Active');
 
 -- --------------------------------------------------------
 
@@ -107,9 +114,11 @@ CREATE TABLE `membership_role` (
 
 INSERT INTO `membership_role` (`MemberRoleID`, `MemberRoleName`) VALUES
 ('R001', 'President'),
-('R002', 'Secretary'),
-('R003', 'Treasurer'),
-('R004', 'Committee Member');
+('R002', 'Vice President'),
+('R003', 'Secretary'),
+('R004', 'Treasurer'),
+('R005', 'Committee Member'),
+('R006', 'General Member');
 
 -- --------------------------------------------------------
 
@@ -178,6 +187,12 @@ ALTER TABLE `event_registration`
   ADD PRIMARY KEY (`RegistrationID`);
 
 --
+-- Indexes for table `membership`
+--
+ALTER TABLE `membership`
+  ADD PRIMARY KEY (`MemberID`);
+
+--
 -- Indexes for table `membership_role`
 --
 ALTER TABLE `membership_role`
@@ -194,6 +209,16 @@ ALTER TABLE `user`
 --
 ALTER TABLE `user_role`
   ADD PRIMARY KEY (`RoleID`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `membership`
+--
+ALTER TABLE `membership`
+  MODIFY `MemberID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

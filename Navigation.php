@@ -27,6 +27,10 @@ if(!isset($_SESSION['UserID']))
             </li>
 
             <li>
+                <a href="ClubList.php">Club</a>
+            </li>
+
+            <li>
                 <a href="Reports.php">Reports</a>
             </li>
 
@@ -81,7 +85,7 @@ if(!isset($_SESSION['UserID']))
         </li>
 
         <li>
-            <a href="logout.php">Logout</a>
+            <a href="Logout.php">Logout</a>
         </li>
 
     </ul>

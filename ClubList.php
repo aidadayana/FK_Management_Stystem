@@ -2,47 +2,49 @@
 require_once 'db.php';
 session_start();
 
-// ROLE CHECK
-$userRole = $_SESSION['UserRole'] ?? '';
-$currentUserID = $_SESSION['UserID'] ?? ''; 
+$currentUserID = $_SESSION['UserID'] ?? '';
 
-$isAdmin = ($userRole === 'Admin');
-$isCommitteeGlobal = ($userRole === 'Committee');
-$isStudentGlobal = ($userRole === 'Student');
+// 1. DYNAMICALLY RESOLVE ROLE FROM DATABASE
+$isAdmin = false;
+$isStudent = false;
+$isCommittee = false;
 
-if (isset($_GET['id'])) {
-    unset($_GET['id']);
+if (!empty($currentUserID)) {
+    $sqlUserRole = "SELECT RoleID FROM user WHERE UserID = '$currentUserID'";
+    $resUserRole = mysqli_query($conn, $sqlUserRole);
+    if ($userRow = mysqli_fetch_assoc($resUserRole)) {
+        $sysRole = $userRow['RoleID'];
+        $isAdmin     = ($sysRole === 'R01');
+        $isStudent   = ($sysRole === 'R02');
+        $isCommittee = ($sysRole === 'R03');
+    }
 }
 
-// FILTER
+// Get filter inputs
 $search = $_GET['search'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
 
-// DATABASE 
+// 2. DATABASE QUERY BASE
 try {
-    // Select c.*, the explicit user join token, and their structural title name for that club assignment row
-    if ($isStudentGlobal || $isCommitteeGlobal) {
-        $query = "SELECT c.*, m.MemberID, mr.MemberRoleName 
+    if ($isAdmin) {
+        $query = "SELECT c.*, m.MemberID, m.MemberStatus 
                   FROM club c 
                   LEFT JOIN membership m ON c.ClubID = m.ClubID AND m.UserID = '$currentUserID'
-                  LEFT JOIN membership_role mr ON m.MemberRoleID = mr.MemberRoleID
-                  WHERE c.ClubStatus='Active'";
-    } else {
-        $query = "SELECT c.*, m.MemberID, mr.MemberRoleName 
-                  FROM club c 
-                  LEFT JOIN membership m ON c.ClubID = m.ClubID AND m.UserID = '$currentUserID'
-                  LEFT JOIN membership_role mr ON m.MemberRoleID = mr.MemberRoleID
                   WHERE 1=1";
+    } else {
+        $query = "SELECT c.*, m.MemberID, m.MemberStatus 
+                  FROM club c 
+                  LEFT JOIN membership m ON c.ClubID = m.ClubID AND m.UserID = '$currentUserID'
+                  WHERE c.ClubStatus='Active'";
     }
 
-    // SEARCH 
+    // SEARCH FILTERS
     if (!empty($search)) {
         $safeSearch = mysqli_real_escape_string($conn, $search);
         $query .= " AND (c.ClubName LIKE '%$safeSearch%' OR c.ClubDesc LIKE '%$safeSearch%')";
     }
 
-    // STATUS FILTER ONLY ADMIN & COMMITTEE
-    if (!$isStudentGlobal && !empty($statusFilter) && $statusFilter !== 'All') {
+    if ($isAdmin && !empty($statusFilter) && $statusFilter !== 'All') {
         $safeStatus = mysqli_real_escape_string($conn, $statusFilter);
         $query .= " AND c.ClubStatus = '$safeStatus'";
     }
@@ -64,13 +66,11 @@ catch (Exception $e) {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Club Directory | Smart Campus</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <?php include('Navigation.php'); ?>
@@ -79,17 +79,8 @@ catch (Exception $e) {
     <div class="header-row">
         <h1>Clubs of Faculty Computing</h1>
         <div style="display:flex; align-items:center; gap:15px;">
-            <p>
-                Current Role:
-                <strong>
-                    <?php echo htmlspecialchars($userRole); ?>
-                </strong>
-            </p>
-
             <?php if ($isAdmin): ?>
-                <a href="ClubAddEdit.php" class="btn btn-primary">
-                    + Add Club
-                </a>
+                <a href="ClubAddEdit.php" class="btn btn-primary">+ Add Club</a>
             <?php endif; ?>
         </div>
     </div>
@@ -104,7 +95,7 @@ catch (Exception $e) {
                 value="<?php echo htmlspecialchars($search); ?>"
             >
 
-            <?php if (!$isStudentGlobal): ?>
+            <?php if ($isAdmin): ?>
                 <select name="status" class="status-select">
                     <option value="">All Status</option>
                     <option value="Active" <?php echo ($statusFilter == 'Active') ? 'selected' : ''; ?>>Active</option>
@@ -114,7 +105,7 @@ catch (Exception $e) {
 
             <div class="btn-group">
                 <button type="submit" class="btn btn-primary">
-                    <?php echo ($isStudentGlobal) ? "Search" : "Filter Results"; ?>
+                    <?php echo ($isAdmin) ? "Filter Results" : "Search"; ?>
                 </button>
                 <a href="ClubList.php" class="btn btn-outline">Reset</a>
             </div>
@@ -126,35 +117,25 @@ catch (Exception $e) {
             <p>No clubs found in the database.</p>
         <?php else: ?>
             <?php foreach($clubs as $club): ?>
-                <?php
-                $isClubActive = (strcasecmp($club['ClubStatus'], 'Active') == 0);
-                
-                // Determine loop context profile role
-                $loopClubRole = isset($club['MemberRoleName']) ? trim($club['MemberRoleName']) : '';
-                
-                $loopIsCommittee = ($userRole === 'Committee' || (!empty($loopClubRole) && !in_array(strtolower($loopClubRole), ['student', 'member'])));
-                $loopIsStudent = ($userRole === 'Student' && !$loopIsCommittee && !$isAdmin);
+                <?php 
+                $isClubActive = (strcasecmp($club['ClubStatus'], 'Active') == 0); 
+                $hasJoined = (!empty($club['MemberID']) && $club['MemberStatus'] === 'Active');
                 ?>
 
                 <div class="club-card">
                     <div>
-                        <?php if (!$isStudentGlobal): ?>
+                        <?php if ($isAdmin): ?>
                             <span class="status-badge <?php echo $isClubActive ? 'status-active' : 'status-inactive'; ?>">
                                 <?php echo htmlspecialchars($club['ClubStatus']); ?>
                             </span>
                         <?php endif; ?>
 
                         <div class="club-header-simple">
-                            <h3>
-                                <?php echo htmlspecialchars($club['ClubName']); ?>
-                            </h3>
+                            <h3><?php echo htmlspecialchars($club['ClubName']); ?></h3>
                         </div>
 
                         <p class="advisor-text">
-                            Advisor:
-                            <strong>
-                                <?php echo htmlspecialchars($club['ClubAdvisor'] ?? 'TBA'); ?>
-                            </strong>
+                            Advisor: <strong><?php echo htmlspecialchars($club['ClubAdvisor'] ?? 'TBA'); ?></strong>
                         </p>
 
                         <p class="description">
@@ -167,16 +148,26 @@ catch (Exception $e) {
                             View Details
                         </a>
 
-                        <?php if ($loopIsStudent): ?>
-                            <?php if ($club['MemberID']): ?>
-                                <span class="btn btn-disabled" style="background: #ccc; cursor: not-allowed;">Already Joined</span>
+                        <?php if ($isStudent): ?>
+                            <?php if ($hasJoined): ?>
+                                <button class="btn" style="background-color: #6c757d; cursor: not-allowed;" disabled>Joined</button>
                             <?php else: ?>
                                 <form action="JoinClub.php" method="POST" style="display:inline;" 
-                                    onsubmit="return confirm('Join <?php echo addslashes($club['ClubName']); ?>?')">
+                                      onsubmit="return confirm('Are you sure you want to join <?php echo addslashes($club['ClubName']); ?>?')">
                                     <input type="hidden" name="ClubID" value="<?php echo $club['ClubID']; ?>">
                                     <button type="submit" class="btn btn-primary">Join Club</button>
                                 </form>
                             <?php endif; ?>
+                        <?php endif; ?>
+
+                        <?php if ($isCommittee && $hasJoined): ?>
+                            <a href="ClubCommManage.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-manage" style="background-color: #ffc107; color: #000;">
+                                Manage
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if ($isAdmin): ?>
+                            <a href="ClubAddEdit.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-edit">Edit</a>
                         <?php endif; ?>
                     </div>
                 </div>

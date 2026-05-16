@@ -298,19 +298,10 @@ body {
     color: #800000; 
 }
 
-/* Table Elements */
-.student-id-badge { 
-    font-family: monospace; 
-    background: #f0f0f0; 
-    padding: 2px 6px; 
-    border-radius: 4px; 
-    font-size: 0.9rem; 
-    color: #333; 
-    margin-right: 8px; 
-}
 
 .student-name { 
-    font-weight: bold; 
+    font-weight: bold;
+    font-size: 1.1rem; 
     color: #800000; 
 }
 
@@ -320,6 +311,38 @@ body {
     border: 1px solid #ddd; 
     cursor: pointer; 
 }
+
+.joined-date-text{
+    color: #5c1d35; 
+    font-size: 1.0rem;
+}
+
+
+
+
+.submit{
+    background: none; 
+    border: none; 
+    padding: 4px; 
+    cursor: pointer; 
+    display: inline-flex; 
+    align-items: center;
+}
+
+.alert-success{
+    background:#d4edda; 
+    color:#155724; 
+    padding:12px;
+    margin:15px 0; 
+    border-radius:4px;
+}
+
+.inline-role-form{
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px;
+}
+
 
 /* BUTTONS */
 .btn { 
@@ -951,3 +974,5 @@ input:focus, select:focus {
     background-color: #800000;
     color: white;
 }
+
+
