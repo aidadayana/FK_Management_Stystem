@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 15, 2026 at 06:19 PM
+-- Generation Time: May 16, 2026 at 10:36 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -118,13 +118,22 @@ INSERT INTO `membership_role` (`MemberRoleID`, `MemberRoleName`) VALUES
 --
 
 CREATE TABLE `user` (
-  `UserID` int(11) NOT NULL,
-  `Name` int(11) NOT NULL,
-  `Email` int(11) NOT NULL,
-  `Password` int(11) NOT NULL,
+  `UserID` varchar(50) NOT NULL,
+  `Name` varchar(100) NOT NULL,
+  `Email` varchar(100) NOT NULL,
+  `Password` varchar(50) NOT NULL,
   `RoleID` varchar(50) NOT NULL,
   `UserStatus` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user`
+--
+
+INSERT INTO `user` (`UserID`, `Name`, `Email`, `Password`, `RoleID`, `UserStatus`) VALUES
+('U001', 'Admin User', 'admin@gmail.com', '123456', 'R01', 'Active'),
+('U002', 'Ali Ahmad', 'ali@gmail.com', '123456', 'R02', 'Active'),
+('U003', 'Siti Aminah', 'siti@gmail.com', '123456', 'R03', 'Active');
 
 -- --------------------------------------------------------
 
@@ -136,6 +145,15 @@ CREATE TABLE `user_role` (
   `RoleID` varchar(50) NOT NULL,
   `RoleName` varchar(120) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user_role`
+--
+
+INSERT INTO `user_role` (`RoleID`, `RoleName`) VALUES
+('R01', 'Admin'),
+('R02', 'Student'),
+('R03', 'Committee');
 
 --
 -- Indexes for dumped tables
@@ -164,6 +182,12 @@ ALTER TABLE `event_registration`
 --
 ALTER TABLE `membership_role`
   ADD PRIMARY KEY (`MemberRoleID`);
+
+--
+-- Indexes for table `user`
+--
+ALTER TABLE `user`
+  ADD PRIMARY KEY (`UserID`);
 
 --
 -- Indexes for table `user_role`

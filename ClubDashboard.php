@@ -1,35 +1,60 @@
 <?php
-session_start(); 
+
+session_start();
+
 require_once 'db.php';
 
-//get Total Clubs
+/* CHECK IF USER LOGGED IN */
+
+if(!isset($_SESSION['UserID']))
+{
+    header("Location: login.php");
+    exit();
+}
+
+/* ONLY ADMIN CAN ACCESS */
+
+if($_SESSION['RoleID'] != 'R03')
+{
+    header("Location: login.php");
+    exit();
+}
+
+/* GET TOTAL CLUBS */
+
 $resTotal = mysqli_query($conn, "SELECT COUNT(*) as count FROM club");
 $totalClubs = mysqli_fetch_assoc($resTotal)['count'];
 
-//get Active Clubs
+/* GET ACTIVE CLUBS */
+
 $resActive = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
 $activeClubs = mysqli_fetch_assoc($resActive)['count'];
 
-//get Total Students
+/* GET TOTAL STUDENTS */
+
 $resStudents = mysqli_query($conn, "SELECT COUNT(DISTINCT UserID) as count FROM user WHERE RoleID = 'Student'");
 $totalStudents = mysqli_fetch_assoc($resStudents)['count'];
 
-//student Bar Chart
+/* STUDENT BAR CHART */
+
 $memberStatsQuery = "
     SELECT c.ClubName, COUNT(m.UserID) as member_count 
     FROM club c 
     LEFT JOIN membership m ON c.ClubID = m.ClubID 
     GROUP BY c.ClubID
 ";
+
 $resStats = mysqli_query($conn, $memberStatsQuery);
 
 $clubNames = [];
 $counts = [];
 
-while ($row = mysqli_fetch_assoc($resStats)) {
+while ($row = mysqli_fetch_assoc($resStats))
+{
     $clubNames[] = $row['ClubName'];
     $counts[] = $row['member_count'];
 }
+
 ?>
 
 <!DOCTYPE html>

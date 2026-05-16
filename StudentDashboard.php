@@ -8,7 +8,7 @@ if(!isset($_SESSION['UserID']))
     exit();
 }
 
-if($_SESSION['RoleID'] != 'R01')
+if($_SESSION['RoleID'] != 'R02')
 {
     header("Location: login.php");
     exit();
@@ -21,7 +21,7 @@ if($_SESSION['RoleID'] != 'R01')
 
 <head>
 
-<title>Admin Dashboard</title>
+<title>Student Dashboard</title>
 
 <link rel="stylesheet" href="styleAdmin.css">
 
@@ -43,9 +43,11 @@ if($_SESSION['RoleID'] != 'R01')
 
         <ul class="menu">
 
-            <li><a href="AdminDashboard.php" class="active">Dashboard</a></li>
+            <li><a href="StudentDashboard.php" class="active">Dashboard</a></li>
 
-            <li><a href="#">User Management</a></li>
+            <li><a href="#">My Clubs</a></li>
+
+            <li><a href="#">Events</a></li>
 
             <li><a href="#">Profile</a></li>
 
@@ -59,7 +61,7 @@ if($_SESSION['RoleID'] != 'R01')
 
         <div class="dashboard-header">
 
-            <h1>Admin Dashboard</h1>
+            <h1>Student Dashboard</h1>
 
             <p>
                 Welcome,
@@ -72,33 +74,25 @@ if($_SESSION['RoleID'] != 'R01')
 
             <div class="dashboard-card">
 
-                <h3>Total Students</h3>
+                <h3>Joined Clubs</h3>
 
-                <p>120</p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <h3>Total Clubs</h3>
-
-                <p>15</p>
+                <p>3</p>
 
             </div>
 
             <div class="dashboard-card">
 
-                <h3>Upcoming Events</h3>
+                <h3>Registered Events</h3>
 
-                <p>8</p>
+                <p>5</p>
 
             </div>
 
             <div class="dashboard-card">
 
-                <h3>New Users</h3>
+                <h3>Attendance Points</h3>
 
-                <p>12</p>
+                <p>80</p>
 
             </div>
 
