@@ -1,113 +1,102 @@
 <?php
-
 session_start();
+require_once 'db.php';
 
-if(!isset($_SESSION['UserID']))
-{
+if(!isset($_SESSION['UserID'])) {
     header("Location: login.php");
     exit();
 }
 
-if($_SESSION['RoleID'] != 'R02')
-{
+if($_SESSION['RoleID'] != 'R02') {
     header("Location: login.php");
     exit();
 }
 
+/* Example placeholders (replace with DB later) */
+$totalClubs = 3;
+$totalEvents = 5;
+$attendancePoints = 80;
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-
-<title>Student Dashboard</title>
-
-<link rel="stylesheet" href="style.css">
-
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-<?php
 
+<?php include('Navigation.php'); ?>
 
-include('Navigation.php');
+<div class="main-content">
 
-?>
+    <!-- HEADER -->
+    <div class="header-row">
+        <h1>STUDENT DASHBOARD</h1>
 
-<div class="dashboard-container">
+        <button onclick="refreshData()" class="btn btn-primary">
+            🔄 Refresh Data
+        </button>
+    </div>
 
-    <div class="sidebar">
+    <p class="club-subtitle">
+        Welcome, <?php echo $_SESSION['Name']; ?>
+    </p>
 
-        <div class="sidebar-logo">
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
 
-            <img src="images/logo.png">
-
-            <h2>FK Management</h2>
-
+        <div class="summary-card">
+            <h3><?php echo $totalClubs; ?></h3>
+            <p>Joined Clubs</p>
         </div>
 
-        <ul class="menu">
+        <div class="summary-card">
+            <h3><?php echo $totalEvents; ?></h3>
+            <p>Registered Events</p>
+        </div>
 
-            <li><a href="StudentDashboard.php" class="active">Dashboard</a></li>
+        <div class="summary-card">
+            <h3><?php echo $attendancePoints; ?></h3>
+            <p>Attendance Points</p>
+        </div>
 
-            <li><a href="#">My Clubs</a></li>
-
-            <li><a href="#">Events</a></li>
-
-            <li><a href="#">Profile</a></li>
-
-            <li><a href="logout.php">Logout</a></li>
-
-        </ul>
+        <div class="summary-card">
+            <h3>Active</h3>
+            <p>Status</p>
+        </div>
 
     </div>
 
-    <div class="dashboard-content">
+    <!-- OPTIONAL SECTION (LIKE ADMIN CHART STYLE) -->
+    <div class="header-row">
+        <h3>Student Overview</h3>
+    </div>
 
-        <div class="dashboard-header">
+    <div class="summary-grid">
 
-            <h1>Student Dashboard</h1>
-
-            <p>
-                Welcome,
-                <?php echo $_SESSION['Name']; ?>
-            </p>
-
+        <div class="summary-card">
+            <h3>✔</h3>
+            <p>Profile Complete</p>
         </div>
 
-        <div class="card-container">
-
-            <div class="dashboard-card">
-
-                <h3>Joined Clubs</h3>
-
-                <p>3</p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <h3>Registered Events</h3>
-
-                <p>5</p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <h3>Attendance Points</h3>
-
-                <p>80</p>
-
-            </div>
-
+        <div class="summary-card">
+            <h3>✔</h3>
+            <p>Club Participation</p>
         </div>
 
     </div>
 
 </div>
 
-</body>
+<script>
+function refreshData() {
+    window.location.reload();
+}
+</script>
 
+</body>
 </html>

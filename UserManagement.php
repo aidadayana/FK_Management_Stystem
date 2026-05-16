@@ -2,31 +2,20 @@
 session_start();
 require_once 'db.php';
 
-if(!isset($_SESSION['UserID']))
-{
+if(!isset($_SESSION['UserID']) || $_SESSION['RoleID'] != 'R01') {
     header("Location: login.php");
     exit();
 }
 
-if($_SESSION['RoleID'] != 'R01')
-{
-    header("Location: login.php");
-    exit();
-}
-
-/* GET USERS */
-$sql = "SELECT UserID, Name, MatricNo, Email, RoleID FROM user";
+$sql = "SELECT UserID, Name, Email, RoleID FROM user";
 $result = mysqli_query($conn, $sql);
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>User Management</title>
-
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -35,11 +24,10 @@ $result = mysqli_query($conn, $sql);
 
 <div class="main-content">
 
-    <!-- HEADER -->
     <div class="header-row">
         <h1>USER MANAGEMENT</h1>
 
-        <a href="add_user.php" class="btn btn-primary">
+        <a href="RegisterUser.php" class="btn btn-primary">
             + Add User
         </a>
     </div>
@@ -48,16 +36,14 @@ $result = mysqli_query($conn, $sql);
         Manage all registered users in the system
     </p>
 
-    <!-- TABLE BOX -->
     <div class="info-table-container">
 
         <table class="management-table">
 
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>User ID</th>
                     <th>Name</th>
-                    <th>Matric No</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Action</th>
@@ -66,25 +52,40 @@ $result = mysqli_query($conn, $sql);
 
             <tbody>
 
-                <?php while($row = mysqli_fetch_assoc($result)) { ?>
+            <?php while($row = mysqli_fetch_assoc($result)) { ?>
 
                 <tr>
+
                     <td><?php echo $row['UserID']; ?></td>
                     <td><?php echo $row['Name']; ?></td>
-                    <td><?php echo $row['MatricNo']; ?></td>
                     <td><?php echo $row['Email']; ?></td>
+
                     <td>
-                        <span class="status-badge status-active">
-                            <?php echo $row['RoleID']; ?>
-                        </span>
+                        <?php
+                            if($row['RoleID'] == 'R01') echo "Admin";
+                            elseif($row['RoleID'] == 'R02') echo "Student";
+                            else echo "Committee";
+                        ?>
                     </td>
+
                     <td>
-                        <a href="edit_user.php?id=<?php echo $row['UserID']; ?>" class="btn btn-outline">Edit</a>
-                        <a href="delete_user.php?id=<?php echo $row['UserID']; ?>" class="btn btn-danger-text">Delete</a>
+
+                        <a href="EditUser.php?id=<?php echo $row['UserID']; ?>"
+                           class="btn btn-outline">
+                            Edit
+                        </a>
+
+                        <a href="DeleteUser.php?id=<?php echo $row['UserID']; ?>"
+                           class="btn btn-danger-text"
+                           onclick="return confirm('Delete this user?')">
+                            Delete
+                        </a>
+
                     </td>
+
                 </tr>
 
-                <?php } ?>
+            <?php } ?>
 
             </tbody>
 
