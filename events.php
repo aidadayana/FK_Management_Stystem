@@ -1,5 +1,5 @@
 <?php
-require_once '../config.php';
+require_once '../db.php';
 
 $page_title  = 'Browse Events';
 $active_page = 'events';
@@ -58,13 +58,13 @@ include '../includes/student_sidebar.php';
 <?php else: ?>
     <?php foreach ($events as $ev): ?>
     <div class="event-card">
-        <div class="event-card-banner">🎉</div>
+        <div class="event-card-banner"></div>
         <div class="event-card-body">
             <span class="badge badge-<?= $ev['status'] ?>"><?= $ev['status'] ?></span>
             <h3><?= htmlspecialchars($ev['title']) ?></h3>
-            <div class="event-card-meta">📅 <?= date('d M Y', strtotime($ev['event_date'])) ?></div>
-            <div class="event-card-meta">📍 <?= htmlspecialchars($ev['venue'] ?? 'TBA') ?></div>
-            <div class="event-card-meta">🏛️ <?= htmlspecialchars($ev['club_name']) ?></div>
+            <div class="event-card-meta"> <?= date('d M Y', strtotime($ev['event_date'])) ?></div>
+            <div class="event-card-meta"> <?= htmlspecialchars($ev['venue'] ?? 'TBA') ?></div>
+            <div class="event-card-meta"> <?= htmlspecialchars($ev['club_name']) ?></div>
         </div>
         <div class="event-card-footer">
             <a href="event_details.php?id=<?= $ev['event_id'] ?>" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;">View Details</a>
