@@ -25,7 +25,7 @@ $resStudents = mysqli_query($conn, "SELECT COUNT(*) as count FROM user WHERE Rol
 $totalStudents = mysqli_fetch_assoc($resStudents)['count'];
 
 /* TOTAL CLUBS */
-$resClubs = mysqli_query($conn, "SELECT COUNT(*) as count FROM club");
+$resClubs = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
 $totalClubs = mysqli_fetch_assoc($resClubs)['count'];
 
 /* TOTAL EVENTS */
