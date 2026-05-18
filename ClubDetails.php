@@ -1,6 +1,12 @@
 <?php
-require_once 'db.php';
-session_start();
+session_start(); // 1. Start the session first!
+require_once 'db.php'; // 2. Then load your database connection
+
+// 3. Now run your defensive check safely
+if (!isset($_SESSION['UserID'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $currentUserID = $_SESSION['UserID'] ?? '';
 

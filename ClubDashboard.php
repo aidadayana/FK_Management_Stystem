@@ -26,17 +26,15 @@ $resTotal = mysqli_query($conn, "SELECT COUNT(*) as count FROM club");
 $totalClubs = mysqli_fetch_assoc($resTotal)['count'];
 
 /* GET ACTIVE CLUBS */
-
 $resActive = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
 $activeClubs = mysqli_fetch_assoc($resActive)['count'];
 
-/* GET TOTAL STUDENTS */
 
-$resStudents = mysqli_query($conn, "SELECT COUNT(DISTINCT UserID) as count FROM user WHERE RoleID = 'Student'");
+/* GET TOTAL STUDENTS (Standard Students R02 + Committee Students R03) */
+$resStudents = mysqli_query($conn, "SELECT COUNT(DISTINCT UserID) as count FROM user WHERE RoleID IN ('R02', 'R03')");
 $totalStudents = mysqli_fetch_assoc($resStudents)['count'];
 
 /* STUDENT BAR CHART */
-
 $memberStatsQuery = "
     SELECT c.ClubName, COUNT(m.UserID) as member_count 
     FROM club c 

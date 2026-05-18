@@ -1,6 +1,13 @@
 <?php
 require_once 'db.php';
 session_start();
+/* Login check guna userID*/
+$allowedRoles = ['R01', 'R03'];
+
+if (!isset($_SESSION['RoleID']) || !in_array($_SESSION['RoleID'], $allowedRoles)) {
+    header("Location: login.php");
+    exit();
+}
 
 $clubID = $_GET['id'] ?? '';
 if (!$clubID) { 

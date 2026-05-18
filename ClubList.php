@@ -1,6 +1,12 @@
 <?php
-require_once 'db.php';
-session_start();
+session_start(); // 1. Start the session first!
+require_once 'db.php'; // 2. Then load your database connection
+
+// 3. Now run your defensive check safely
+if (!isset($_SESSION['UserID'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $currentUserID = $_SESSION['UserID'] ?? '';
 
@@ -160,15 +166,6 @@ catch (Exception $e) {
                             <?php endif; ?>
                         <?php endif; ?>
 
-                        <?php if ($isCommittee && $hasJoined): ?>
-                            <a href="ClubCommManage.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-manage" style="background-color: #ffc107; color: #000;">
-                                Manage
-                            </a>
-                        <?php endif; ?>
-
-                        <?php if ($isAdmin): ?>
-                            <a href="ClubAddEdit.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-edit">Edit</a>
-                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
