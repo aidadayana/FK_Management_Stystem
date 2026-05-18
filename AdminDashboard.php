@@ -2,35 +2,35 @@
 session_start();
 require_once 'db.php';
 
-/* LOGIN CHECK */
+/* Login check guna userID*/
 if(!isset($_SESSION['UserID'])) {
     header("Location: login.php");
     exit();
 }
 
-/* ROLE CHECK (ADMIN ONLY) */
+/* Role check R01-Admin */
 if($_SESSION['RoleID'] != 'R01') {
     header("Location: login.php");
     exit();
 }
 
-/* TOTAL STUDENTS */
+/* Get total student */
 $resStudents = mysqli_query($conn, "SELECT COUNT(*) as count FROM user WHERE RoleID = 'R02'");
 $totalStudents = mysqli_fetch_assoc($resStudents)['count'];
 
-/* TOTAL ACTIVE CLUBS */
+/* Get total active clubs */
 $resClubs = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
 $totalClubs = mysqli_fetch_assoc($resClubs)['count'];
 
-/* TOTAL EVENTS */
+/* get total events */
 $resEvents = mysqli_query($conn, "SELECT COUNT(*) as count FROM event");
 $totalEvents = mysqli_fetch_assoc($resEvents)['count'];
 
-/* TOTAL USERS */
+/* get total users */
 $resUsers = mysqli_query($conn, "SELECT COUNT(*) as count FROM user");
 $totalUsers = mysqli_fetch_assoc($resUsers)['count'];
 
-/* ROLE DISTRIBUTION */
+/* Chart(groups users by role and counts them) */
 $resRole = mysqli_query($conn, "SELECT RoleID, COUNT(*) as count FROM user GROUP BY RoleID");
 
 $roles = [];
@@ -41,7 +41,7 @@ while($row = mysqli_fetch_assoc($resRole)) {
     $roleCounts[] = $row['count'];
 }
 
-/* NEW CHART DATA */
+/* second chart (Club vs Event) */
 $resActiveClubs = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
 $activeClubs = mysqli_fetch_assoc($resActiveClubs)['count'];
 
@@ -65,7 +65,7 @@ $totalEventCount = mysqli_fetch_assoc($resEventCount)['count'];
 
 <div class="main-content">
 
-    <!-- HEADER -->
+    
     <div class="header-row">
         <h1>ADMIN DASHBOARD</h1>
 
@@ -74,7 +74,7 @@ $totalEventCount = mysqli_fetch_assoc($resEventCount)['count'];
         </button>
     </div>
 
-    <!-- SUMMARY CARDS -->
+    <!-- Summary part -->
     <div class="summary-grid">
 
         <div class="summary-card">
@@ -99,19 +99,19 @@ $totalEventCount = mysqli_fetch_assoc($resEventCount)['count'];
 
     </div>
 
-    <!-- CHART SECTION -->
+    <!-- Chart part -->
     <div class="header-row">
         <h3>System Overview</h3>
     </div>
 
     <div class="summary-grid">
 
-        <!-- ROLE CHART -->
+        <!-- Role chart -->
         <div class="chart-container">
             <canvas id="roleChart"></canvas>
         </div>
 
-        <!-- CLUB VS EVENT CHART -->
+        <!-- Club vs event chart -->
         <div class="chart-container">
             <canvas id="clubEventChart"></canvas>
         </div>
@@ -125,7 +125,7 @@ function refreshData() {
     window.location.reload();
 }
 
-/* ROLE BAR CHART */
+/* Role(Bar Chart) */
 const ctx = document.getElementById('roleChart').getContext('2d');
 
 new Chart(ctx, {
@@ -159,7 +159,7 @@ new Chart(ctx, {
     }
 });
 
-/* CLUB VS EVENT DOUGHNUT CHART */
+/* Club Vs event (donut chart) */
 const ctx2 = document.getElementById('clubEventChart').getContext('2d');
 
 new Chart(ctx2, {
