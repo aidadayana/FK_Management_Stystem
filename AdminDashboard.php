@@ -3,28 +3,22 @@ session_start();
 require_once 'db.php';
 
 /* LOGIN CHECK */
-if(!isset($_SESSION['UserID']))
-{
+if(!isset($_SESSION['UserID'])) {
     header("Location: login.php");
     exit();
 }
 
 /* ROLE CHECK (ADMIN ONLY) */
-if($_SESSION['RoleID'] != 'R01')
-{
+if($_SESSION['RoleID'] != 'R01') {
     header("Location: login.php");
     exit();
 }
 
-/* =========================
-   DATABASE QUERIES
-========================= */
-
-/* TOTAL STUDENTS (R02) */
+/* TOTAL STUDENTS */
 $resStudents = mysqli_query($conn, "SELECT COUNT(*) as count FROM user WHERE RoleID = 'R02'");
 $totalStudents = mysqli_fetch_assoc($resStudents)['count'];
 
-/* TOTAL CLUBS */
+/* TOTAL ACTIVE CLUBS */
 $resClubs = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
 $totalClubs = mysqli_fetch_assoc($resClubs)['count'];
 
@@ -32,9 +26,9 @@ $totalClubs = mysqli_fetch_assoc($resClubs)['count'];
 $resEvents = mysqli_query($conn, "SELECT COUNT(*) as count FROM event");
 $totalEvents = mysqli_fetch_assoc($resEvents)['count'];
 
-/* NEW USERS (LAST 7 DAYS - simple version) */
-$resNew = mysqli_query($conn, "SELECT COUNT(*) as count FROM user");
-$newUsers = mysqli_fetch_assoc($resNew)['count'];
+/* TOTAL USERS */
+$resUsers = mysqli_query($conn, "SELECT COUNT(*) as count FROM user");
+$totalUsers = mysqli_fetch_assoc($resUsers)['count'];
 
 /* ROLE DISTRIBUTION */
 $resRole = mysqli_query($conn, "SELECT RoleID, COUNT(*) as count FROM user GROUP BY RoleID");
@@ -42,11 +36,17 @@ $resRole = mysqli_query($conn, "SELECT RoleID, COUNT(*) as count FROM user GROUP
 $roles = [];
 $roleCounts = [];
 
-while($row = mysqli_fetch_assoc($resRole))
-{
+while($row = mysqli_fetch_assoc($resRole)) {
     $roles[] = $row['RoleID'];
     $roleCounts[] = $row['count'];
 }
+
+/* NEW CHART DATA */
+$resActiveClubs = mysqli_query($conn, "SELECT COUNT(*) as count FROM club WHERE ClubStatus = 'Active'");
+$activeClubs = mysqli_fetch_assoc($resActiveClubs)['count'];
+
+$resEventCount = mysqli_query($conn, "SELECT COUNT(*) as count FROM event");
+$totalEventCount = mysqli_fetch_assoc($resEventCount)['count'];
 ?>
 
 <!DOCTYPE html>
@@ -55,7 +55,6 @@ while($row = mysqli_fetch_assoc($resRole))
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -85,7 +84,7 @@ while($row = mysqli_fetch_assoc($resRole))
 
         <div class="summary-card">
             <h3><?php echo $totalClubs; ?></h3>
-            <p>Total Clubs</p>
+            <p>Total Active Clubs</p>
         </div>
 
         <div class="summary-card">
@@ -94,7 +93,7 @@ while($row = mysqli_fetch_assoc($resRole))
         </div>
 
         <div class="summary-card">
-            <h3><?php echo $newUsers; ?></h3>
+            <h3><?php echo $totalUsers; ?></h3>
             <p>Total Users</p>
         </div>
 
@@ -107,8 +106,14 @@ while($row = mysqli_fetch_assoc($resRole))
 
     <div class="summary-grid">
 
+        <!-- ROLE CHART -->
         <div class="chart-container">
             <canvas id="roleChart"></canvas>
+        </div>
+
+        <!-- CLUB VS EVENT CHART -->
+        <div class="chart-container">
+            <canvas id="clubEventChart"></canvas>
         </div>
 
     </div>
@@ -116,12 +121,11 @@ while($row = mysqli_fetch_assoc($resRole))
 </div>
 
 <script>
-function refreshData()
-{
+function refreshData() {
     window.location.reload();
 }
 
-/* ROLE CHART */
+/* ROLE BAR CHART */
 const ctx = document.getElementById('roleChart').getContext('2d');
 
 new Chart(ctx, {
@@ -150,6 +154,33 @@ new Chart(ctx, {
             y: {
                 beginAtZero: true,
                 ticks: { stepSize: 1 }
+            }
+        }
+    }
+});
+
+/* CLUB VS EVENT DOUGHNUT CHART */
+const ctx2 = document.getElementById('clubEventChart').getContext('2d');
+
+new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: ['Active Clubs', 'Events'],
+        datasets: [{
+            data: [
+                <?php echo $activeClubs; ?>,
+                <?php echo $totalEventCount; ?>
+            ],
+            backgroundColor: ['#800000', '#D7B7A3']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Club vs Event Overview'
             }
         }
     }
