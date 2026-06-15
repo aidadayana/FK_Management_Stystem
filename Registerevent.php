@@ -32,15 +32,40 @@ $chk->bind_param('ss', $event_id, $user_id);
 $chk->execute();
 $existing = $chk->get_result()->fetch_assoc();
 
-$success = false;
-$error   = '';
+// Check if already on waitlist
+$wchk = $conn->prepare("SELECT WaitlistID, Queue FROM waitlist WHERE EventID = ? AND UserID = ? AND WaitlistStatus = 'Waiting'");
+$wchk->bind_param('ss', $event_id, $user_id);
+$wchk->execute();
+$existing_wait = $wchk->get_result()->fetch_assoc();
+
+$success    = false;
+$waitlisted = false;
+$error      = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $max = $event['MaxParticipants'] ?? 0;
-    if ($max > 0 && $reg_count >= $max) {
-        $error = 'Sorry, this event is fully booked.';
-    } elseif ($existing && $existing['RegStatus'] === 'Confirmed') {
+
+    if ($existing && $existing['RegStatus'] === 'Confirmed') {
         $error = 'You have already registered for this event.';
+    } elseif ($existing_wait) {
+        $error = 'You are already on the waiting list for this event.';
+    } elseif ($max > 0 && $reg_count >= $max) {
+        // Event is full → add to waitlist
+        $wl_id   = 'WL' . strtoupper(uniqid());
+        $wl_date = date('Y-m-d');
+
+        // Determine next queue number
+        $qr = $conn->prepare("SELECT COALESCE(MAX(Queue),0) + 1 as next_queue FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting'");
+        $qr->bind_param('s', $event_id);
+        $qr->execute();
+        $next_queue = $qr->get_result()->fetch_assoc()['next_queue'];
+
+        $wins = $conn->prepare("INSERT INTO waitlist (WaitlistID, EventID, UserID, Queue, WaitJoinDate, WaitlistStatus) VALUES (?,?,?,?,?,'Waiting')");
+        $wins->bind_param('sssis', $wl_id, $event_id, $user_id, $next_queue, $wl_date);
+        $wins->execute();
+
+        $waitlisted   = true;
+        $waitlist_pos = $next_queue;
     } else {
         // Generate RegistrationID
         $reg_id = 'REG' . strtoupper(uniqid());
@@ -63,6 +88,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $slots_left = ($event['MaxParticipants'] > 0) ? max(0, $event['MaxParticipants'] - $reg_count) : 'Unlimited';
 $is_full    = ($event['MaxParticipants'] > 0) && ($reg_count >= $event['MaxParticipants']);
+
+// Get current waitlist count for display
+$wc = $conn->prepare("SELECT COUNT(*) as cnt FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting'");
+$wc->bind_param('s', $event_id);
+$wc->execute();
+$waitlist_count = $wc->get_result()->fetch_assoc()['cnt'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -114,14 +145,20 @@ $is_full    = ($event['MaxParticipants'] > 0) && ($reg_count >= $event['MaxParti
 
     <!-- Steps indicator -->
     <div class="steps">
-        <div class="step <?= !$success ? 'active' : 'done' ?>">1. Review Details</div>
-        <div class="step <?= $success ? 'active' : '' ?>">2. Confirm</div>
+        <div class="step <?= (!$success && !$waitlisted) ? 'active' : 'done' ?>">1. Review Details</div>
+        <div class="step <?= ($success || $waitlisted) ? 'active' : '' ?>">2. Confirm</div>
     </div>
 
     <?php if ($success): ?>
         <div class="alert alert-success">
             ✅ <strong>Registration successful!</strong> You have been registered for <strong><?= htmlspecialchars($event['Title']) ?></strong>.
             <a href="MyRegistrations.php" style="color:var(--primary-maroon);font-weight:600;margin-left:6px;">View My Registrations →</a>
+        </div>
+    <?php endif; ?>
+    <?php if ($waitlisted): ?>
+        <div class="alert alert-warning">
+            ⏳ <strong>This event is full.</strong> You've been added to the waiting list for <strong><?= htmlspecialchars($event['Title']) ?></strong> — your position is <strong>#<?= $waitlist_pos ?></strong>.
+            <a href="Waitlist.php" style="color:var(--primary-maroon);font-weight:600;margin-left:6px;">View My Waitlist →</a>
         </div>
     <?php endif; ?>
     <?php if ($error): ?>
@@ -148,6 +185,9 @@ $is_full    = ($event['MaxParticipants'] > 0) && ($reg_count >= $event['MaxParti
                 <?php else: ?>
                     — <strong>Unlimited slots</strong>
                 <?php endif; ?>
+                <?php if ($waitlist_count > 0): ?>
+                    <br><span style="font-size:0.82rem;">⏳ <?= $waitlist_count ?> student(s) currently on the waiting list</span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -155,7 +195,7 @@ $is_full    = ($event['MaxParticipants'] > 0) && ($reg_count >= $event['MaxParti
         <div class="card">
             <div class="card-title">Your Information</div>
 
-            <?php if (!$success): ?>
+            <?php if (!$success && !$waitlisted): ?>
             <form method="POST">
                 <div class="form-group">
                     <label>User ID</label>
@@ -167,10 +207,17 @@ $is_full    = ($event['MaxParticipants'] > 0) && ($reg_count >= $event['MaxParti
                 </div>
                 <p style="font-size:0.82rem;color:#888;margin-bottom:16px;">Your details are pre-filled from your account.</p>
 
-                <?php if ($is_full): ?>
-                    <div class="alert alert-error">❌ This event is fully booked. No slots available.</div>
-                <?php elseif ($existing && $existing['RegStatus'] === 'Confirmed'): ?>
+                <?php if ($existing && $existing['RegStatus'] === 'Confirmed'): ?>
                     <div class="alert alert-success">✅ You are already registered for this event.</div>
+                <?php elseif ($existing_wait): ?>
+                    <div class="alert alert-warning">⏳ You are already on the waiting list (position #<?= $existing_wait['Queue'] ?>).</div>
+                    <a href="Waitlist.php" class="btn btn-ghost">View My Waitlist</a>
+                <?php elseif ($is_full): ?>
+                    <div class="alert alert-error">❌ This event is fully booked. You can join the waiting list — if a slot opens up, you may be offered a place.</div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button type="submit" class="btn btn-primary">⏳ Join Waiting List</button>
+                        <a href="EventDetails.php?id=<?= urlencode($event_id) ?>" class="btn btn-ghost">Cancel</a>
+                    </div>
                 <?php else: ?>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
                         <button type="submit" class="btn btn-primary">✅ Confirm Registration</button>
@@ -178,12 +225,19 @@ $is_full    = ($event['MaxParticipants'] > 0) && ($reg_count >= $event['MaxParti
                     </div>
                 <?php endif; ?>
             </form>
-            <?php else: ?>
+            <?php elseif ($success): ?>
                 <div style="text-align:center;padding:20px 0;">
                     <div style="font-size:3rem;margin-bottom:12px;">🎉</div>
                     <p style="color:#1b5e20;font-weight:600;font-size:1rem;margin-bottom:6px;">Registration Confirmed!</p>
                     <p style="color:#666;font-size:0.88rem;margin-bottom:20px;">We look forward to seeing you at the event.</p>
                     <a href="MyRegistrations.php" class="btn btn-primary">📋 View My Registrations</a>
+                </div>
+            <?php elseif ($waitlisted): ?>
+                <div style="text-align:center;padding:20px 0;">
+                    <div style="font-size:3rem;margin-bottom:12px;">⏳</div>
+                    <p style="color:#5c4000;font-weight:600;font-size:1rem;margin-bottom:6px;">Added to Waiting List!</p>
+                    <p style="color:#666;font-size:0.88rem;margin-bottom:20px;">Your position is <strong>#<?= $waitlist_pos ?></strong>. You'll be notified if a slot becomes available.</p>
+                    <a href="Waitlist.php" class="btn btn-primary">⏳ View My Waitlist</a>
                 </div>
             <?php endif; ?>
         </div>
