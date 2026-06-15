@@ -45,6 +45,9 @@
                 <a href="StudentEvent.php">Events</a>
             </li>
             <li>
+                <a href="Waitlist.php">My Waitlist</a>
+            </li>
+            <li>
                 <a href="MyRegistrations.php">My Registrations</a>
             </li>
         <?php } ?>
