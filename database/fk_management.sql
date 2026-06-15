@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 18, 2026 at 04:30 PM
+-- Generation Time: Jun 15, 2026 at 07:14 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -73,10 +73,22 @@ CREATE TABLE `event` (
   `EventDate` date NOT NULL,
   `EventTime` time NOT NULL,
   `Venue` varchar(250) NOT NULL,
-  `MaxParicipants` int(11) NOT NULL,
+  `MaxParticipants` int(11) NOT NULL,
   `ClubID` varchar(50) NOT NULL,
   `EventStatus` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `event`
+--
+
+INSERT INTO `event` (`EventID`, `Title`, `Description`, `EventDate`, `EventTime`, `Venue`, `MaxParticipants`, `ClubID`, `EventStatus`) VALUES
+('EV001', 'HCI Workshop 2026', 'Hands-on workshop exploring human-computer interaction principles and usability testing.', '2026-07-15', '09:00:00', 'Block A, Room 301', 50, 'E002', 'Upcoming'),
+('EV002', 'DNS Security Talk', 'A technical seminar on network security, DNS protocols, and ethical hacking basics.', '2026-07-22', '14:00:00', 'Auditorium 1', 100, 'E010', 'Upcoming'),
+('EV003', 'HCI Design Sprint', 'Collaborative design sprint — bring your ideas and build a prototype in 4 hours.', '2026-05-10', '10:00:00', 'Lab 2, Block B', 30, 'E002', 'Completed'),
+('EV20260607133031', 'Bubble Run 2026', 'fun run', '2026-06-08', '07:30:00', 'UMPSA PEKAN', 100, 'E002', 'Upcoming'),
+('EV20260615065553', 'Test', 'Test', '2026-06-16', '14:00:00', 'Library', 10, 'E002', 'Upcoming'),
+('EV20260615070601', 'Test', 'Test', '2026-06-16', '13:05:00', 'Library', 0, 'E002', 'Upcoming');
 
 -- --------------------------------------------------------
 
@@ -86,11 +98,22 @@ CREATE TABLE `event` (
 
 CREATE TABLE `event_registration` (
   `RegistrationID` varchar(50) NOT NULL,
+  `EventID` varchar(50) NOT NULL,
   `UserID` varchar(50) NOT NULL,
+  `StudentName` varchar(100) NOT NULL DEFAULT '',
   `ClubID` varchar(50) NOT NULL,
   `RegistrationDate` date NOT NULL,
-  `RegistrationStatus` varchar(50) NOT NULL
+  `RegStatus` varchar(50) NOT NULL,
+  `RegisteredAt` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `event_registration`
+--
+
+INSERT INTO `event_registration` (`RegistrationID`, `EventID`, `UserID`, `StudentName`, `ClubID`, `RegistrationDate`, `RegStatus`, `RegisteredAt`) VALUES
+('REG6A2F85FE7F8F4', 'EV001', 'U002', 'Ali Ahmad', 'E002', '2026-06-15', 'Cancelled', '2026-06-15 12:56:30'),
+('REG6A2F87D2357EE', 'EV002', 'U002', 'Ali Ahmad', 'E010', '2026-06-15', 'Cancelled', '2026-06-15 13:04:18');
 
 -- --------------------------------------------------------
 
@@ -113,7 +136,8 @@ CREATE TABLE `membership` (
 
 INSERT INTO `membership` (`MemberID`, `UserID`, `ClubID`, `MemberRoleID`, `JoinDate`, `MemberStatus`) VALUES
 (1, 'U003', 'E002', 'R001', '2026-05-17', 'Active'),
-(3, 'U004', 'E010', 'R002', '2026-05-17', 'Active');
+(3, 'U004', 'E010', 'R002', '2026-05-17', 'Active'),
+(4, 'U002', 'E010', 'R006', '2026-06-15', 'Active');
 
 -- --------------------------------------------------------
 
@@ -211,6 +235,21 @@ INSERT INTO `user_role` (`RoleID`, `RoleName`) VALUES
 ('R02', 'Student'),
 ('R03', 'Committee');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `waitlist`
+--
+
+CREATE TABLE `waitlist` (
+  `WaitlistID` varchar(50) NOT NULL,
+  `EventID` varchar(50) NOT NULL,
+  `UserID` varchar(50) NOT NULL,
+  `Queue` int(11) NOT NULL,
+  `WaitJoinDate` date NOT NULL,
+  `WaitlistStatus` varchar(50) NOT NULL DEFAULT 'Waiting'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Indexes for dumped tables
 --
@@ -276,6 +315,12 @@ ALTER TABLE `user_role`
   ADD PRIMARY KEY (`RoleID`);
 
 --
+-- Indexes for table `waitlist`
+--
+ALTER TABLE `waitlist`
+  ADD PRIMARY KEY (`WaitlistID`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -289,7 +334,7 @@ ALTER TABLE `attendance`
 -- AUTO_INCREMENT for table `membership`
 --
 ALTER TABLE `membership`
-  MODIFY `MemberID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `MemberID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `participation_summary`
