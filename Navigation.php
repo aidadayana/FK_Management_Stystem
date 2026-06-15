@@ -1,5 +1,18 @@
 <?php
 
+if(session_status() == PHP_SESSION_NONE)
+{
+    session_start();
+}
+
+/* Prevent browser cache */
+
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+/* Check login */
+
 if(!isset($_SESSION['UserID']))
 {
     header("Location: login.php");
@@ -19,19 +32,27 @@ if(!isset($_SESSION['UserID']))
         <?php if($_SESSION['RoleID'] == 'R01') { ?>
 
             <li>
-                <a href="AdminDashboard.php">Dashboard</a>
+                <a href="AdminDashboard.php">
+                    Dashboard
+                </a>
             </li>
 
             <li>
-                <a href="UserManagement.php">User Management</a>
+                <a href="UserManagement.php">
+                    User Management
+                </a>
             </li>
 
             <li>
-                <a href="ClubList.php">List of Club</a>
+                <a href="ClubList.php">
+                    List of Club
+                </a>
             </li>
 
             <li>
-                <a href="Reports.php">Reports</a>
+                <a href="Reports.php">
+                    Reports
+                </a>
             </li>
 
         <?php } ?>
@@ -43,19 +64,27 @@ if(!isset($_SESSION['UserID']))
         <?php if($_SESSION['RoleID'] == 'R02') { ?>
 
             <li>
-                <a href="StudentDashboard.php">Dashboard</a>
+                <a href="StudentDashboard.php">
+                    Dashboard
+                </a>
             </li>
 
             <li>
-                <a href="ClubList.php">List of Club</a>
+                <a href="ClubList.php">
+                    List of Club
+                </a>
             </li>
 
             <li>
-                <a href="MyClub.php">My Club</a>
+                <a href="MyClub.php">
+                    My Club
+                </a>
             </li>
 
             <li>
-                <a href="StudentEvent.php">Events</a>
+                <a href="StudentEvent.php">
+                    Events
+                </a>
             </li>
 
         <?php } ?>
@@ -67,25 +96,34 @@ if(!isset($_SESSION['UserID']))
         <?php if($_SESSION['RoleID'] == 'R03') { ?>
 
             <li>
-                <a href="ClubDashboard.php">Dashboard</a>
+                <a href="ClubDashboard.php">
+                    Dashboard
+                </a>
             </li>
 
             <li>
-                <a href="ClubList.php">List of Club</a>
+                <a href="ClubList.php">
+                    List of Club
+                </a>
             </li>
 
         <?php } ?>
 
 
 
-        <!-- EVERYONE -->
+        <!-- COMMON MENU -->
 
         <li>
-            <a href="Profile.php">Profile</a>
+            <a href="Profile.php">
+                Profile
+            </a>
         </li>
 
         <li>
-            <a href="Logout.php">Logout</a>
+            <a href="Logout.php"
+               onclick="return confirm('Are you sure you want to logout?');">
+                Logout
+            </a>
         </li>
 
     </ul>

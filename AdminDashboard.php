@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+/* Prevent browser cache */
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 require_once 'db.php';
 
 /* Login check guna userID*/
