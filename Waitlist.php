@@ -30,8 +30,9 @@ $stmt->bind_param('s', $user_id);
 $stmt->execute();
 $waitlist_entries = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-$total   = count($waitlist_entries);
-$waiting = count(array_filter($waitlist_entries, fn($w) => $w['WaitlistStatus'] === 'Waiting'));
+$total    = count($waitlist_entries);
+$waiting  = count(array_filter($waitlist_entries, fn($w) => $w['WaitlistStatus'] === 'Waiting'));
+$promoted = count(array_filter($waitlist_entries, fn($w) => $w['WaitlistStatus'] === 'Promoted'));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,8 +97,14 @@ $waiting = count(array_filter($waitlist_entries, fn($w) => $w['WaitlistStatus'] 
         <div class="alert alert-info">ℹ️ You have left the waiting list.</div>
     <?php endif; ?>
 
+    <?php if ($promoted > 0): ?>
+        <div class="alert" style="background:#e8f5e9;color:#1b5e20;border-left:4px solid #2e7d32;">
+            🎉 Good news! A slot opened up and you've been automatically moved from the waitlist to confirmed registration. Check <a href="MyRegistrations.php" style="color:#1b5e20;font-weight:600;">My Registrations</a>.
+        </div>
+    <?php endif; ?>
+
     <div class="alert alert-note">
-        ⏳ When an event reaches its maximum participants, you can join its waiting list from the Register page. If a confirmed student cancels, the next person in line may be offered the open slot.
+        ⏳ When an event reaches its maximum participants, you can join its waiting list from the Register page. If a confirmed student cancels, the next person in line is <strong>automatically promoted</strong> to a confirmed registration.
     </div>
 
     <!-- Stats Bar -->
@@ -110,6 +117,11 @@ $waiting = count(array_filter($waitlist_entries, fn($w) => $w['WaitlistStatus'] 
         <div class="reg-stat">
             <span class="reg-stat-num" style="color:#856404;"><?= $waiting ?></span>
             <span class="reg-stat-label">Currently Waiting</span>
+        </div>
+        <div class="reg-divider"></div>
+        <div class="reg-stat">
+            <span class="reg-stat-num" style="color:#1b5e20;"><?= $promoted ?></span>
+            <span class="reg-stat-label">Promoted</span>
         </div>
     </div>
 
