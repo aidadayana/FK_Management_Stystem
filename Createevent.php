@@ -50,13 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         if ($is_edit) {
             $u = $conn->prepare("UPDATE event SET Title=?, Description=?, EventDate=?, EventTime=?, Venue=?, ClubID=?, MaxParticipants=?, EventStatus=? WHERE EventID=?");
-            $u->bind_param('sssssisis', $title, $desc, $date, $time, $venue, $club_id, $max_p, $status, $event_id);
+            $u->bind_param('sssssssis', $title, $desc, $date, $time, $venue, $club_id, $max_p, $status, $event_id);
             $u->execute();
         } else {
             // Generate EventID: EV + timestamp
             $new_id = 'EV' . date('YmdHis');
             $i = $conn->prepare("INSERT INTO event (EventID, Title, Description, EventDate, EventTime, Venue, ClubID, MaxParticipants, EventStatus) VALUES (?,?,?,?,?,?,?,?,?)");
-            $i->bind_param('ssssssiss', $new_id, $title, $desc, $date, $time, $venue, $club_id, $max_p, $status);
+            $i->bind_param('sssssssis', $new_id, $title, $desc, $date, $time, $venue, $club_id, $max_p, $status);
             $i->execute();
         }
         header("Location: ManageEvents.php?msg=saved"); exit();
