@@ -8,17 +8,30 @@ if (!isset($_SESSION['UserID']) || $_SESSION['RoleID'] !== 'R02') {
 }
 
 $user_id = $_SESSION['UserID'];
+$error_msg = '';
 
 // Handle cancel registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
+    $cancel_id = trim($_POST['cancel_id']);
+    
+    // BULLETPROOF CANCEL EXECUTION: We bind as string 's' which safely parses both string IDs and integers in MySQL
     $upd = $conn->prepare("UPDATE event_registration SET RegStatus='Cancelled' WHERE RegistrationID=? AND UserID=?");
-    $upd->bind_param('ss', $_POST['cancel_id'], $user_id);
-    $upd->execute();
-    header("Location: Myregistrations.php?msg=cancelled"); 
-    exit();
+    $upd->bind_param('ss', $cancel_id, $user_id);
+    
+    if ($upd->execute()) {
+        if ($upd->affected_rows > 0) {
+            header("Location: Myregistrations.php?msg=cancelled"); 
+            exit();
+        } else {
+            // If database executed but didn't change rows, catch it here
+            $error_msg = "Could not find a matching active registration row to cancel.";
+        }
+    } else {
+        $error_msg = "Database error during cancellation execution: " . $conn->error;
+    }
 }
 
-// FIX: Changed ORDER BY to er.RegistrationDate DESC so it lists by the latest date the student joined
+// Fetch user registrations ordered by the latest date they joined
 $stmt = $conn->prepare("
     SELECT er.*, e.Title, e.EventDate, e.EventTime, e.Venue, e.EventStatus, e.EventID
     FROM event_registration er
@@ -67,11 +80,15 @@ $confirmed = count(array_filter($registrations, fn($r) => $r['RegStatus'] === 'C
     <div style="margin-bottom: 25px;">
         <div class="club-subtitle">Student Portal</div>
         <h2 style="margin: 5px 0 0 0; font-size: 1.6rem; color: var(--primary-maroon);">My Registered Events</h2>
-        <div style="font-size:0.85rem;color:#888;">Track your historical and active event involvements sorted by registration history.</div>
+        <div style="font-size:0.85rem;color:#888;">Track your active and historical event registrations.</div>
     </div>
 
     <?php if (isset($_GET['msg']) && $_GET['msg'] === 'cancelled'): ?>
-        <div style="background:#fdecea; color:#b71c1c; padding:12px; margin-bottom:20px; border-radius:8px;">❌ Registration successfully cancelled.</div>
+        <div style="background:#e8f5e9; color:#1b5e20; padding:12px; margin-bottom:20px; border-radius:8px;">✅ Registration successfully cancelled.</div>
+    <?php endif; ?>
+
+    <?php if ($error_msg): ?>
+        <div style="background:#fdecea; color:#b71c1c; padding:12px; margin-bottom:20px; border-radius:8px;">❌ <?= htmlspecialchars($error_msg) ?></div>
     <?php endif; ?>
 
     <div class="stats-grid">
@@ -113,8 +130,9 @@ $confirmed = count(array_filter($registrations, fn($r) => $r['RegStatus'] === 'C
                     <td>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;">
                             <a href="EventDetails.php?id=<?= urlencode($r['EventID']) ?>" class="btn btn-ghost btn-sm">View</a>
+                            
                             <?php if ($r['RegStatus'] === 'Confirmed' && $r['EventStatus'] === 'Upcoming'): ?>
-                            <form method=\"POST\" onsubmit=\"return confirm('Cancel your registration for this event?');\" style=\"display:inline;\">
+                            <form method="POST" action="" onsubmit="return confirm('Cancel your registration for this event?');" style="display:inline;">
                                 <input type="hidden" name="cancel_id" value="<?= htmlspecialchars($r['RegistrationID']) ?>">
                                 <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
                             </form>
