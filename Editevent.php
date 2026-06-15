@@ -9,14 +9,16 @@ if (!isset($_SESSION['UserID']) || !in_array($_SESSION['RoleID'], ['R01', 'R03']
 
 $role    = $_SESSION['RoleID'];
 $user_id = $_SESSION['UserID'];
-$event_id = trim($_GET['id'] ?? '');
+
+// Grab event ID safely from either GET or POST
+$event_id = trim($_REQUEST['id'] ?? $_REQUEST['EventID'] ?? '');
 
 if (!$event_id) {
     header("Location: Manageevents.php");
     exit();
 }
 
-// Fetch event details
+// 1. Fetch current event details
 $s = $conn->prepare("SELECT * FROM event WHERE EventID=?");
 $s->bind_param('s', $event_id);
 $s->execute();
@@ -27,6 +29,7 @@ if (!$event) {
     exit();
 }
 
+// 2. Fetch clubs for select dropdown based on operational access profile
 if ($role === 'R01') {
     $clubs = $conn->query("SELECT ClubID, ClubName FROM club WHERE ClubStatus='Active' ORDER BY ClubName")->fetch_all(MYSQLI_ASSOC);
 } else {
@@ -37,40 +40,34 @@ if ($role === 'R01') {
 }
 
 $error = '';
-$success = '';
 
+// 3. Process form submission safely
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = trim($_POST['Title'] ?? '');
-    $description = trim($_POST['Description'] ?? '');
-    $event_date = $_POST['EventDate'] ?? '';
-    $event_time = $_POST['EventTime'] ?? '';
-    $venue = trim($_POST['Venue'] ?? '');
+    $title            = trim($_POST['Title'] ?? '');
+    $description      = trim($_POST['Description'] ?? '');
+    $event_date       = $_POST['EventDate'] ?? '';
+    $event_time       = $_POST['EventTime'] ?? '';
+    $venue            = trim($_POST['Venue'] ?? '');
     $max_participants = intval($_POST['MaxParticipants'] ?? 0);
-    $club_id = $_POST['ClubID'] ?? '';
-    $event_status = $_POST['EventStatus'] ?? 'Upcoming';
+    $club_id          = trim($_POST['ClubID'] ?? '');
+    $event_status     = $_POST['EventStatus'] ?? 'Upcoming';
 
     if (!$title || !$description || !$event_date || !$event_time || !$venue || !$club_id) {
         $error = "All fields are required.";
     } else {
         $old_max = $event['MaxParticipants'];
+        
+        // Dynamic Variable binding match matching your exact database columns
         $u_stmt = $conn->prepare("UPDATE event SET Title=?, Description=?, EventDate=?, EventTime=?, Venue=?, MaxParticipants=?, ClubID=?, EventStatus=? WHERE EventID=?");
-        $u_stmt->bind_param('ssssssiss', $title, $description, $event_date, $event_time, $venue, $max_participants, $club_id, $event_status, $event_id);
+        
+        // We bind using 's' to pass clean text or numerical strings to handle your custom database context flawlessly
+        $u_stmt->bind_param('sssssssss', $title, $description, $event_date, $event_time, $venue, $max_participants, $club_id, $event_status, $event_id);
         
         if ($u_stmt->execute()) {
-            $success = "Event updated successfully!";
-            $event['Title'] = $title;
-            $event['Description'] = $description;
-            $event['EventDate'] = $event_date;
-            $event['EventTime'] = $event_time;
-            $event['Venue'] = $venue;
-            $event['MaxParticipants'] = $max_participants;
-            $event['ClubID'] = $club_id;
-            $event['EventStatus'] = $event_status;
-
-            // Waitlist Promotion Hook
+            // Check waitlist promotions if capacity grew
             if ($max_participants > $old_max && $event_status === 'Upcoming') {
                 $slots_opened = $max_participants - $old_max;
-                $wait_stmt = $conn->prepare("SELECT * FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting' ORDER BY Queue ASC, WaitJoinDate ASC LIMIT ?");
+                $wait_stmt = $conn->prepare("SELECT * FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting' ORDER BY Queue ASC LIMIT ?");
                 $wait_stmt->bind_param('si', $event_id, $slots_opened);
                 $wait_stmt->execute();
                 $waiting = $wait_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -79,8 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $u_lookup = $conn->prepare("SELECT Name FROM user WHERE UserID = ?");
                     $u_lookup->bind_param('s', $next_user['UserID']);
                     $u_lookup->execute();
-                    $u_res = $u_lookup->get_result()->fetch_assoc();
-                    $student_name = $u_res ? $u_res['Name'] : 'Student';
+                    $student_name = ($u_res = $u_lookup->get_result()->fetch_assoc()) ? $u_res['Name'] : 'Student';
 
                     $new_reg_id = 'REG' . strtoupper(uniqid());
                     $today = date('Y-m-d');
@@ -95,8 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
+            
+            // Redirect smoothly back to table workspace view
+            header("Location: Manageevents.php?msg=updated");
+            exit();
         } else {
-            $error = "Update execution breakdown.";
+            $error = "Database update error: " . $conn->error;
         }
     }
 }
@@ -129,15 +129,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="form-container">
-        <?php if ($error): ?><div style="color:red; margin-bottom:15px;">❌ <?= $error ?></div><?php endif; ?>
-        <?php if ($success): ?><div style="color:green; margin-bottom:15px;">✅ <?= $success ?></div><?php endif; ?>
+        <?php if ($error): ?><div style="color:red; margin-bottom:15px;">❌ <?= htmlspecialchars($error) ?></div><?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="EventID" value="<?= htmlspecialchars($event['EventID']) ?>">
+            
             <div class="form-group">
                 <label>Organizing Club</label>
                 <select name="ClubID" class="form-control" required>
                     <?php foreach ($clubs as $c): ?>
-                        <option value="<?= $c['ClubID'] ?>" <?= $event['ClubID'] === $c['ClubID'] ? 'selected' : '' ?>><?= htmlspecialchars($c['ClubName']) ?></option>
+                        <option value="<?= htmlspecialchars($c['ClubID']) ?>" <?= ((string)$event['ClubID'] === (string)$c['ClubID']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($c['ClubName']) ?> (ID: <?= htmlspecialchars($c['ClubID']) ?>)
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>

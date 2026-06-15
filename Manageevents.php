@@ -15,11 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id']) && $role
     $d = $conn->prepare("DELETE FROM event WHERE EventID=?");
     $d->bind_param('s', $_POST['delete_id']);
     $d->execute();
-    header("Location: Manageevents.php?msg=deleted"); exit();
+    header("Location: Manageevents.php?msg=deleted"); 
+    exit();
 }
 
-// Fetch events — committee sees only their club's events
+// Fetch events
 if ($role === 'R01') {
+    // Admin sees everything
     $events = $conn->query("
         SELECT e.*, c.ClubName,
         (SELECT COUNT(*) FROM event_registration er WHERE er.EventID = e.EventID AND er.RegStatus = 'Confirmed') as RegCount
@@ -28,27 +30,19 @@ if ($role === 'R01') {
         ORDER BY e.EventDate DESC
     ")->fetch_all(MYSQLI_ASSOC);
 } else {
-    $mc = $conn->prepare("SELECT ClubID FROM membership WHERE UserID=? AND MemberStatus='Active' LIMIT 1");
-    $mc->bind_param('s', $user_id);
-    $mc->execute();
-    $res = $mc->get_result()->fetch_assoc();
-    $club_id = $res ? $res['ClubID'] : '';
-
-    if ($club_id) {
-        $st = $conn->prepare("
-            SELECT e.*, c.ClubName,
-            (SELECT COUNT(*) FROM event_registration er WHERE er.EventID = e.EventID AND er.RegStatus = 'Confirmed') as RegCount
-            FROM event e
-            JOIN club c ON e.ClubID = c.ClubID
-            WHERE e.ClubID = ?
-            ORDER BY e.EventDate DESC
-        ");
-        $st->bind_param('s', $club_id);
-        $st->execute();
-        $events = $st->get_result()->fetch_all(MYSQLI_ASSOC);
-    } else {
-        $events = [];
-    }
+    // FIX: Committee can see events for ANY club they have an active membership in
+    $st = $conn->prepare("
+        SELECT e.*, c.ClubName,
+        (SELECT COUNT(*) FROM event_registration er WHERE er.EventID = e.EventID AND er.RegStatus = 'Confirmed') as RegCount
+        FROM event e
+        JOIN club c ON e.ClubID = c.ClubID
+        JOIN membership m ON e.ClubID = m.ClubID
+        WHERE m.UserID = ? AND m.MemberStatus = 'Active'
+        ORDER BY e.EventDate DESC
+    ");
+    $st->bind_param('s', $user_id);
+    $st->execute();
+    $events = $st->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 ?>
 <!DOCTYPE html>
@@ -126,7 +120,7 @@ if ($role === 'R01') {
                             <a href="ViewParticipants.php?id=<?= urlencode($ev['EventID']) ?>" class="btn btn-ghost">👥</a>
                             <a href="Editevent.php?id=<?= urlencode($ev['EventID']) ?>" class="btn btn-outline">✏️ Edit</a>
                             <?php if ($role === 'R01'): ?>
-                            <form method="POST" onsubmit=\"return confirm('Delete this event?');\" style="display:inline;">
+                            <form method="POST" onsubmit="return confirm('Delete this event?');\" style="display:inline;">
                                 <input type="hidden" name="delete_id" value="<?= htmlspecialchars($ev['EventID']) ?>">
                                 <button type="submit" class="btn btn-danger">🗑️</button>
                             </form>
