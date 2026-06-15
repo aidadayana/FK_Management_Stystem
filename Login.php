@@ -1,50 +1,52 @@
 <?php
-
 session_start();
-
 include("db.php");
 
-if(isset($_POST['login']))
-{
+if(isset($_POST['login'])) {
+
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $query = "SELECT * FROM user
-              WHERE Email='$email'
-              AND Password='$password'";
+    // ✅ Use prepared statement (SECURE)
+    $stmt = $conn->prepare("SELECT * FROM user WHERE Email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
 
-    $result = mysqli_query($conn, $query);
+    $result = $stmt->get_result();
 
-    if(mysqli_num_rows($result) > 0)
-    {
-        $row = mysqli_fetch_assoc($result);
+    if($result->num_rows > 0) {
 
-        $_SESSION['UserID'] = $row['UserID'];
-        $_SESSION['Name'] = $row['Name'];
-        $_SESSION['RoleID'] = $row['RoleID'];
+        $row = $result->fetch_assoc();
 
-        if($row['RoleID'] == 'R01')
-        {
-            header("Location: AdminDashboard.php");
-            exit();
+        // 🔐 VERIFY HASHED PASSWORD
+        if(password_verify($password, $row['Password'])) {
+
+            $_SESSION['UserID'] = $row['UserID'];
+            $_SESSION['Name'] = $row['Name'];
+            $_SESSION['RoleID'] = $row['RoleID'];
+
+            // ROLE REDIRECT
+            if($row['RoleID'] == 'R01') {
+                header("Location: AdminDashboard.php");
+                exit();
+            }
+            elseif($row['RoleID'] == 'R02') {
+                header("Location: StudentDashboard.php");
+                exit();
+            }
+            elseif($row['RoleID'] == 'R03') {
+                header("Location: ClubDashboard.php");
+                exit();
+            }
+
+        } else {
+            echo "<script>alert('Invalid Email or Password');</script>";
         }
-        elseif($row['RoleID'] == 'R02')
-        {
-            header("Location: StudentDashboard.php");
-            exit();
-        }
-        elseif($row['RoleID'] == 'R03')
-        {
-            header("Location: ClubDashboard.php");
-            exit();
-        }
-    }
-    else
-    {
+
+    } else {
         echo "<script>alert('Invalid Email or Password');</script>";
     }
 }
-
 ?>
 
 <!DOCTYPE html>

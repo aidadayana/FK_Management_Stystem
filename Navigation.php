@@ -33,11 +33,6 @@ if(!isset($_SESSION['UserID']))
             <li>
                 <a href="ManageEvents.php">Manage Events</a>
             </li>
-            <li>
-                <a href="Reports.php">
-                    Reports
-                </a>
-            </li>
         <?php } ?>
 
         <!-- STUDENT -->
