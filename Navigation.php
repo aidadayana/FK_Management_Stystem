@@ -14,7 +14,12 @@ if(!isset($_SESSION['UserID']))
         <?php if(($_SESSION['RoleID'] ?? '') == 'R01') { ?>
             <li>
                 <a href="AdminDashboard.php">
-                    Dashboard
+                    AdminDashboard
+                </a>
+            </li>
+            <li>
+                <a href="ClubDashboard.php">
+                     Club Dashboard
                 </a>
             </li>
             <li>
@@ -33,6 +38,9 @@ if(!isset($_SESSION['UserID']))
             <li>
                 <a href="ManageEvents.php">Manage Events</a>
             </li>
+            <li>
+                <a href="ClubReport.php">Club Reports</a>
+            </li>
         <?php } ?>
 
         <!-- STUDENT -->
@@ -47,11 +55,7 @@ if(!isset($_SESSION['UserID']))
                     List of Club
                 </a>
             </li>
-            <li>
-                <a href="MyClub.php">
-                    My Club
-                </a>
-            </li>
+            
             <li>
                 <a href="StudentEvent.php">
                     Events
@@ -69,7 +73,7 @@ if(!isset($_SESSION['UserID']))
         <?php if(($_SESSION['RoleID'] ?? '') == 'R03') { ?>
             <li>
                 <a href="ClubDashboard.php">
-                    Dashboard
+                     Club Dashboard
                 </a>
             </li>
             <li>

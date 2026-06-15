@@ -23,13 +23,58 @@ if (isset($_GET['id'])) {
     }
 }
 
+// Auto-generate ClubID for new club
+if (!$isEdit) {
+
+    $sql = "SELECT MAX(CAST(SUBSTRING(ClubID,2) AS UNSIGNED)) AS maxID
+            FROM club";
+
+    $result = mysqli_query($conn, $sql);
+    $row = mysqli_fetch_assoc($result);
+
+    $nextID = ($row['maxID'] ?? 0) + 1;
+
+    $clubID = 'C' . str_pad($nextID, 3, '0', STR_PAD_LEFT);
+}
+
 // 2. Handle POST request to Save or Update
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $formID      = mysqli_real_escape_string($conn, $_POST['club_id']);
-    $formName    = mysqli_real_escape_string($conn, $_POST['club_name']);
+    $formName    = trim($_POST['club_name']);
+    $formName    = mysqli_real_escape_string($conn, $formName);
     $formDesc    = mysqli_real_escape_string($conn, $_POST['club_desc']);
     $formAdvisor = mysqli_real_escape_string($conn, $_POST['club_advisor']);
     $formStatus  = mysqli_real_escape_string($conn, $_POST['club_status']);
+
+    // Check for duplicate club name
+    $check = mysqli_query(
+        $conn,
+        "SELECT ClubID FROM club
+         WHERE ClubName = '$formName'
+         AND ClubID != '$formID'"
+    );
+
+   if (mysqli_num_rows($check) > 0) {
+    echo '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    </head>
+    <body>
+    <script>
+        Swal.fire({
+            icon: "error",
+            title: "Duplicate Club",
+            text: "Club name already exists!"
+        }).then(() => {
+            window.history.back();
+        });
+    </script>
+    </body>
+    </html>';
+    exit();
+    }
     
     if ($isEdit) {
         $sql = "UPDATE club SET 
@@ -57,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <title><?php echo $isEdit ? "Edit Club" : "Register Club"; ?> | Smart Campus</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <?php include('Navigation.php'); ?>
@@ -70,8 +116,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="form-grid">
                 <div class="form-group">
                     <label>Club ID</label>
-                    <input type="text" name="club_id" value="<?php echo htmlspecialchars($clubID); ?>" required <?php echo $isEdit ? 'readonly class="readonly-input"' : ''; ?>>
-                </div>
+                    <input type="text"
+                    name="club_id"
+                    value="<?php echo htmlspecialchars($clubID); ?>"
+                    readonly
+                    class="readonly-input">
+                    </div>
 
                 <div class="form-group">
                     <label>Current Status</label>
