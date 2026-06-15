@@ -227,7 +227,7 @@ try {
                 <?php endif; ?>
 
                 <?php if ($isCommittee): ?>
-                    <a href="ClubCommManage.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-manage">Manage Events</a>
+                    <a href="ClubCommManage.php?id=<?php echo $club['ClubID']; ?>" class="btn btn-manage">Manage Committee</a>
                 <?php endif; ?>
             </div>
         </div>
