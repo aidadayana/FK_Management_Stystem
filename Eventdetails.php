@@ -28,11 +28,17 @@ $reg_count = $rc->get_result()->fetch_assoc()['cnt'];
 
 // Check if current user is registered (students only)
 $existing = null;
+$existing_wait = null;
 if ($role === 'R02') {
     $chk = $conn->prepare("SELECT RegStatus FROM event_registration WHERE EventID = ? AND UserID = ?");
     $chk->bind_param('ss', $event_id, $user_id);
     $chk->execute();
     $existing = $chk->get_result()->fetch_assoc();
+
+    $wchk = $conn->prepare("SELECT WaitlistID, Queue FROM waitlist WHERE EventID = ? AND UserID = ? AND WaitlistStatus = 'Waiting'");
+    $wchk->bind_param('ss', $event_id, $user_id);
+    $wchk->execute();
+    $existing_wait = $wchk->get_result()->fetch_assoc();
 }
 
 $slots_left = ($event['MaxParticipants'] > 0) ? max(0, $event['MaxParticipants'] - $reg_count) : null;
@@ -175,10 +181,14 @@ $back_url = ($role === 'R01') ? 'ManageEvents.php' : 'StudentEvent.php';
                     <?php if ($existing && $existing['RegStatus'] === 'Confirmed'): ?>
                         <div class="reg-status-box reg-already">✅ You are registered for this event.</div>
                         <a href="MyRegistrations.php" class="btn btn-ghost" style="width:100%;justify-content:center;">View My Registrations</a>
+                    <?php elseif ($existing_wait): ?>
+                        <div class="reg-status-box reg-full">⏳ You are on the waiting list — position #<?= $existing_wait['Queue'] ?>.</div>
+                        <a href="Waitlist.php" class="btn btn-ghost" style="width:100%;justify-content:center;">View My Waitlist</a>
                     <?php elseif (!$is_upcoming): ?>
                         <div class="reg-status-box reg-full">This event is <?= strtolower($event['EventStatus']) ?>. Registration is closed.</div>
                     <?php elseif ($is_full): ?>
                         <div class="reg-status-box reg-full">❌ This event is fully booked.</div>
+                        <a href="RegisterEvent.php?id=<?= urlencode($event_id) ?>" class="btn btn-primary">⏳ Join Waiting List</a>
                     <?php else: ?>
                         <div class="reg-status-box reg-open">✅ Registration is open!</div>
                         <a href="RegisterEvent.php?id=<?= urlencode($event_id) ?>" class="btn btn-primary">Register Now →</a>
