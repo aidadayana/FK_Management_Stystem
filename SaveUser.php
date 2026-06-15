@@ -11,27 +11,24 @@ if(!isset($_SESSION['UserID']) || $_SESSION['RoleID'] != 'R01')
 }
 
 $name = $_POST['name'];
-
 $email = $_POST['email'];
-
 $password = $_POST['password'];
-
 $role = $_POST['role'];
 
 /* AUTO GENERATE USER ID */
-
 $query = "SELECT COUNT(*) AS total FROM user";
-
 $result = mysqli_query($conn, $query);
-
 $row = mysqli_fetch_assoc($result);
 
 $number = $row['total'] + 1;
-
 $userID = "U00" . $number;
 
-/* INSERT USER */
+/* =========================
+   🔐 PASSWORD ENCRYPTION
+   ========================= */
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
+/* INSERT USER */
 $stmt = $conn->prepare("
     INSERT INTO user
     (UserID, Name, Email, Password, RoleID, UserStatus)
@@ -43,16 +40,18 @@ $stmt->bind_param(
     $userID,
     $name,
     $email,
-    $password,
+    $hashedPassword,
     $role
 );
 
 if($stmt->execute())
 {
     header("Location: UserManagement.php");
+    exit();
 }
 else
 {
-    echo "Error Registering User";
+    echo "Error Registering User: " . $conn->error;
 }
+
 ?>
