@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
             
             if ($promo_stmt->execute()) {
                 // Update waitlist entry to reflect that they have been promoted
-                $upd_wait = $conn->prepare("UPDATE waitlist SET WaitlistStatus = 'Registered' WHERE WaitlistID = ?");
+                $upd_wait = $conn->prepare("UPDATE waitlist SET WaitlistStatus = 'Promoted' WHERE WaitlistID = ?");
                 $upd_wait->bind_param('s', $waitlist_id);
                 $upd_wait->execute();
             }
