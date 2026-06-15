@@ -9,8 +9,6 @@ if (!isset($_SESSION['UserID']) || !in_array($_SESSION['RoleID'], ['R01', 'R03']
 
 $role    = $_SESSION['RoleID'];
 $user_id = $_SESSION['UserID'];
-
-// Grab event ID safely from either GET or POST
 $event_id = trim($_REQUEST['id'] ?? $_REQUEST['EventID'] ?? '');
 
 if (!$event_id) {
@@ -18,7 +16,7 @@ if (!$event_id) {
     exit();
 }
 
-// 1. Fetch current event details
+// 1. Fetch current event properties safely
 $s = $conn->prepare("SELECT * FROM event WHERE EventID=?");
 $s->bind_param('s', $event_id);
 $s->execute();
@@ -29,7 +27,7 @@ if (!$event) {
     exit();
 }
 
-// 2. Fetch clubs for select dropdown based on operational access profile
+// 2. Fetch clubs dropdown configuration mappings
 if ($role === 'R01') {
     $clubs = $conn->query("SELECT ClubID, ClubName FROM club WHERE ClubStatus='Active' ORDER BY ClubName")->fetch_all(MYSQLI_ASSOC);
 } else {
@@ -41,7 +39,7 @@ if ($role === 'R01') {
 
 $error = '';
 
-// 3. Process form submission safely
+// 3. Process the form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title            = trim($_POST['Title'] ?? '');
     $description      = trim($_POST['Description'] ?? '');
@@ -55,36 +53,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$title || !$description || !$event_date || !$event_time || !$venue || !$club_id) {
         $error = "All fields are required.";
     } else {
-        $old_max = $event['MaxParticipants'];
+        $old_max = intval($event['MaxParticipants']);
         
-        // Dynamic Variable binding match matching your exact database columns
+        // Save updates to the event table
         $u_stmt = $conn->prepare("UPDATE event SET Title=?, Description=?, EventDate=?, EventTime=?, Venue=?, MaxParticipants=?, ClubID=?, EventStatus=? WHERE EventID=?");
-        
-        // We bind using 's' to pass clean text or numerical strings to handle your custom database context flawlessly
         $u_stmt->bind_param('sssssssss', $title, $description, $event_date, $event_time, $venue, $max_participants, $club_id, $event_status, $event_id);
         
         if ($u_stmt->execute()) {
-            // Check waitlist promotions if capacity grew
+            
+            // AUTOMATIC WAITLIST PROMOTION PIPELINE
             if ($max_participants > $old_max && $event_status === 'Upcoming') {
                 $slots_opened = $max_participants - $old_max;
-                $wait_stmt = $conn->prepare("SELECT * FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting' ORDER BY Queue ASC LIMIT ?");
+                
+                // Find users on the waiting list for this specific event
+                $wait_stmt = $conn->prepare("SELECT * FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting' ORDER BY Queue ASC, WaitJoinDate ASC LIMIT ?");
                 $wait_stmt->bind_param('si', $event_id, $slots_opened);
                 $wait_stmt->execute();
                 $waiting = $wait_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
                 foreach ($waiting as $next_user) {
+                    // Look up student name to maintain registration record integrity
                     $u_lookup = $conn->prepare("SELECT Name FROM user WHERE UserID = ?");
                     $u_lookup->bind_param('s', $next_user['UserID']);
                     $u_lookup->execute();
-                    $student_name = ($u_res = $u_lookup->get_result()->fetch_assoc()) ? $u_res['Name'] : 'Student';
+                    $u_res = $u_lookup->get_result()->fetch_assoc();
+                    $student_name = $u_res ? $u_res['Name'] : 'Student';
 
+                    // Generate a dynamic, unique text primary key for registration table format rules
                     $new_reg_id = 'REG' . strtoupper(uniqid());
                     $today = date('Y-m-d');
 
+                    // FIXED: Balanced 7 configuration variables with 7 explicit type descriptors
                     $promo_stmt = $conn->prepare("INSERT INTO event_registration (RegistrationID, EventID, UserID, StudentName, ClubID, RegistrationDate, RegStatus) VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')");
-                    $promo_stmt->bind_param('ssssss', $new_reg_id, $event_id, $next_user['UserID'], $student_name, $club_id, $today);
+                    $promo_stmt->bind_param('sssssss', $new_reg_id, $event_id, $next_user['UserID'], $student_name, $club_id, $today);
                     
                     if ($promo_stmt->execute()) {
+                        // Mark waitlist row status as 'Promoted' so they are moved out of the queue
                         $upd_wait = $conn->prepare("UPDATE waitlist SET WaitlistStatus = 'Promoted' WHERE WaitlistID = ?");
                         $upd_wait->bind_param('s', $next_user['WaitlistID']);
                         $upd_wait->execute();
@@ -92,11 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
-            // Redirect smoothly back to table workspace view
             header("Location: Manageevents.php?msg=updated");
             exit();
         } else {
-            $error = "Database update error: " . $conn->error;
+            $error = "Database update execution rejected: " . $conn->error;
         }
     }
 }
@@ -139,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <select name="ClubID" class="form-control" required>
                     <?php foreach ($clubs as $c): ?>
                         <option value="<?= htmlspecialchars($c['ClubID']) ?>" <?= ((string)$event['ClubID'] === (string)$c['ClubID']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($c['ClubName']) ?> (ID: <?= htmlspecialchars($c['ClubID']) ?>)
+                            <?= htmlspecialchars($c['ClubName']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
