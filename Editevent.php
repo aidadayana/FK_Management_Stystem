@@ -11,12 +11,13 @@ if (!isset($_SESSION['UserID']) || !in_array($_SESSION['RoleID'], ['R01', 'R03']
 $role    = $_SESSION['RoleID'];
 $user_id = $_SESSION['UserID'];
 
-$event_id = trim($_GET['id'] ?? '');
+// BULLETPROOF ID CHECK: Check for both 'id' and 'EventID' to match whatever your dashboard sends
+$event_id = trim($_GET['id'] ?? $_GET['EventID'] ?? '');
 $event    = null;
 $is_edit  = false;
 
 // 1. Fetch event if editing
-if ($event_id) {
+if ($event_id !== '') {
     $s = $conn->prepare("SELECT * FROM event WHERE EventID=?");
     $s->bind_param('s', $event_id);
     $s->execute();
@@ -47,11 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $max_participants = intval($_POST['MaxParticipants'] ?? 0);
     $club_id          = $_POST['ClubID'] ?? '';
     
-    // Fallback logic structure for status metrics
     if ($is_edit) {
         $event_status = $_POST['EventStatus'] ?? 'Upcoming';
     } else {
-        $event_status = 'Upcoming'; // Default creation status value
+        $event_status = 'Upcoming';
     }
 
     if (!$title || !$description || !$event_date || !$event_time || !$venue || !$club_id) {
@@ -60,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Maximum participants cannot be a negative value.";
     } else {
         if ($is_edit) {
-            // Track capacity shifts to check if we need to promote waitlisted items
             $old_max = $event['MaxParticipants'];
 
             // UPDATE CRUD EXECUTION
@@ -70,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($u_stmt->execute()) {
                 $success = "Event updated successfully!";
                 
-                // Refresh core local data representation tracking array variables
+                // Refresh local data array
                 $event['Title'] = $title;
                 $event['Description'] = $description;
                 $event['EventDate'] = $event_date;
@@ -80,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $event['ClubID'] = $club_id;
                 $event['EventStatus'] = $event_status;
 
-                // AUTOMATIC WAITLIST PROMOTION: If capacity opens wider, fill slots immediately!
+                // AUTOMATIC WAITLIST PROMOTION
                 if ($max_participants > $old_max && $event_status === 'Upcoming') {
                     $slots_opened = $max_participants - $old_max;
 
@@ -131,7 +130,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if ($i_stmt->execute()) {
                 $success = "Event successfully built and posted!";
-                // Clean context cache values to clear out inputs fields
                 $title = $description = $event_date = $event_time = $venue = '';
                 $max_participants = 0;
             } else {
@@ -175,6 +173,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="main-content">
     <div style="margin-bottom: 25px;">
         <div class="club-subtitle">Event Management</div>
+        
+        <!-- Debugging Flag Indicator (Visible to you only during tracking error states) -->
+        <?php if (!empty($event_id) && !$is_edit): ?>
+            <div style="background:#fff3cd; color:#856404; padding:10px; margin-bottom:15px; border-radius:5px; font-size:0.8rem;">
+                ⚠️ <strong>System Debug Alert:</strong> The file received an ID (<code><?= htmlspecialchars($event_id) ?></code>), but couldn't find a matching record in the database table. Check your database IDs!
+            </div>
+        <?php endif; ?>
+
         <h2 style="margin: 5px 0 0 0; font-size: 1.6rem; color: var(--primary-maroon);">
             <?= $is_edit ? '⚙️ Edit Event Details' : '✨ Create New Event' ?>
         </h2>
