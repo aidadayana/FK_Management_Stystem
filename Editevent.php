@@ -14,14 +14,12 @@ $user_id = $_SESSION['UserID'];
 // Safely pull the ID passed from Manageevents.php
 $event_id = trim($_GET['id'] ?? $_POST['EventID'] ?? '');
 $event    = null;
-$is_edit  = false;
 
 if ($event_id !== '') {
     $s = $conn->prepare("SELECT * FROM event WHERE EventID=?");
     $s->bind_param('s', $event_id);
     $s->execute();
-    $event   = $s->get_result()->fetch_assoc();
-    $is_edit = (bool)$event;
+    $event = $s->get_result()->fetch_assoc();
 }
 
 if (!$event) {
@@ -29,7 +27,7 @@ if (!$event) {
     exit();
 }
 
-// Fetch active clubs dropdown options
+// Fetch active clubs dropdown options based on permissions
 if ($role === 'R01') {
     $clubs = $conn->query("SELECT ClubID, ClubName FROM club WHERE ClubStatus='Active' ORDER BY ClubName")->fetch_all(MYSQLI_ASSOC);
 } else {
@@ -40,68 +38,79 @@ if ($role === 'R01') {
 }
 
 $error = '';
-$success = '';
 
-// Process Form Submission (Save Updates)
+// 3. Process Form Submission (Save Updates)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title            = trim($_POST['Title']);
-    $description      = trim($_POST['Description']);
-    $event_date       = $_POST['EventDate'];
-    $event_time       = $_POST['EventTime'];
-    $venue            = trim($_POST['Venue']);
-    $max_participants = intval($_POST['MaxParticipants']);
-    $club_id          = $_POST['ClubID'];
-    $event_status     = $_POST['EventStatus'] ?? 'Upcoming';
+    // Grab the event ID safely before doing anything else
+    $event_id = trim($_POST['EventID'] ?? $_GET['id'] ?? '');
 
-    if (empty($title) || empty($description) || empty($event_date) || empty($event_time) || empty($venue) || empty($club_id)) {
-        $error = "All fields are required.";
+    if (empty($event_id)) {
+        $error = "Critical Error: Missing Event Identifier.";
     } else {
-        $old_max = intval($event['MaxParticipants']);
+        // Fetch the absolute CURRENT database state right before updating to compute true delta
+        $fresh_stmt = $conn->prepare("SELECT MaxParticipants FROM event WHERE EventID = ?");
+        $fresh_stmt->bind_param('s', $event_id);
+        $fresh_stmt->execute();
+        $fresh_res = $fresh_stmt->get_result()->fetch_assoc();
+        $old_max = $fresh_res ? intval($fresh_res['MaxParticipants']) : 0;
 
-        // Update statement matching your table structure parameters completely
-        $u_stmt = $conn->prepare("UPDATE event SET Title=?, Description=?, EventDate=?, EventTime=?, Venue=?, MaxParticipants=?, ClubID=?, EventStatus=? WHERE EventID=?");
-        $u_stmt->bind_param('sssssiiss', $title, $description, $event_date, $event_time, $venue, $max_participants, $club_id, $event_status, $event_id);
-        
-        if ($u_stmt->execute()) {
+        $title            = trim($_POST['Title']);
+        $description      = trim($_POST['Description']);
+        $event_date       = $_POST['EventDate'];
+        $event_time       = $_POST['EventTime'];
+        $venue            = trim($_POST['Venue']);
+        $max_participants = intval($_POST['MaxParticipants']);
+        $club_id          = $_POST['ClubID'];
+        $event_status     = $_POST['EventStatus'] ?? 'Upcoming';
+
+        if (empty($title) || empty($description) || empty($event_date) || empty($event_time) || empty($venue) || empty($club_id)) {
+            $error = "All fields are required.";
+        } else {
+            // Update the main event record safely using string binding format to keep text IDs intact
+            $u_stmt = $conn->prepare("UPDATE event SET Title=?, Description=?, EventDate=?, EventTime=?, Venue=?, MaxParticipants=?, ClubID=?, EventStatus=? WHERE EventID=?");
+            $u_stmt->bind_param('sssssssss', $title, $description, $event_date, $event_time, $venue, $max_participants, $club_id, $event_status, $event_id);
             
-            // AUTOMATIC WAITLIST PIPELINE
-            if ($max_participants > $old_max && $event_status === 'Upcoming') {
-                $slots_opened = $max_participants - $old_max;
+            if ($u_stmt->execute()) {
+                
+                // AUTOMATIC WAITLIST PIPELINE
+                if ($max_participants > $old_max && $event_status === 'Upcoming') {
+                    $slots_opened = $max_participants - $old_max;
 
-                // Grab next students in line who are waiting
-                $wait_stmt = $conn->prepare("SELECT * FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting' ORDER BY Queue ASC, WaitJoinDate ASC LIMIT ?");
-                $wait_stmt->bind_param('si', $event_id, $slots_opened);
-                $wait_stmt->execute();
-                $waiting = $wait_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                    // Find students next in line who are waiting
+                    $wait_stmt = $conn->prepare("SELECT * FROM waitlist WHERE EventID = ? AND WaitlistStatus = 'Waiting' ORDER BY Queue ASC, WaitJoinDate ASC LIMIT ?");
+                    $wait_stmt->bind_param('si', $event_id, $slots_opened);
+                    $wait_stmt->execute();
+                    $waiting = $wait_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-                foreach ($waiting as $next_user) {
-                    // Fetch real student name to ensure absolute registration log integrity
-                    $u_lookup = $conn->prepare("SELECT Name FROM user WHERE UserID = ?");
-                    $u_lookup->bind_param('s', $next_user['UserID']);
-                    $u_lookup->execute();
-                    $u_res = $u_lookup->get_result()->fetch_assoc();
-                    $student_name = $u_res ? $u_res['Name'] : 'Student';
+                    foreach ($waiting as $next_user) {
+                        // Fetch real student name to maintain registration data integrity
+                        $u_lookup = $conn->prepare("SELECT Name FROM user WHERE UserID = ?");
+                        $u_lookup->bind_param('s', $next_user['UserID']);
+                        $u_lookup->execute();
+                        $u_res = $u_lookup->get_result()->fetch_assoc();
+                        $student_name = $u_res ? $u_res['Name'] : 'Student';
 
-                    $new_reg_id = 'REG' . strtoupper(uniqid());
-                    $today = date('Y-m-d');
+                        $new_reg_id = 'REG' . strtoupper(uniqid());
+                        $today = date('Y-m-d');
 
-                    // Balanced insert params mapping right to your core database definitions
-                    $promo_stmt = $conn->prepare("INSERT INTO event_registration (RegistrationID, EventID, UserID, StudentName, ClubID, RegistrationDate, RegStatus) VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')");
-                    $promo_stmt->bind_param('sssssss', $new_reg_id, $event_id, $next_user['UserID'], $student_name, $club_id, $today);
-                    
-                    if ($promo_stmt->execute()) {
-                        // Mark waitlist tracking index as Promoted
-                        $upd_wait = $conn->prepare("UPDATE waitlist SET WaitlistStatus = 'Promoted' WHERE WaitlistID = ?");
-                        $upd_wait->bind_param('s', $next_user['WaitlistID']);
-                        $upd_wait->execute();
+                        // Balanced INSERT mapping: 6 placeholders -> 6 parameters ('ssssss')
+                        $promo_stmt = $conn->prepare("INSERT INTO event_registration (RegistrationID, EventID, UserID, StudentName, ClubID, RegistrationDate, RegStatus) VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')");
+                        $promo_stmt->bind_param('ssssss', $new_reg_id, $event_id, $next_user['UserID'], $student_name, $club_id, $today);
+                        
+                        if ($promo_stmt->execute()) {
+                            // Move them out of the waiting queue smoothly
+                            $upd_wait = $conn->prepare("UPDATE waitlist SET WaitlistStatus = 'Promoted' WHERE WaitlistID = ?");
+                            $upd_wait->bind_param('s', $next_user['WaitlistID']);
+                            $upd_wait->execute();
+                        }
                     }
                 }
-            }
 
-            header("Location: Manageevents.php?msg=updated");
-            exit();
-        } else {
-            $error = "Failed to update event: " . $conn->error;
+                header("Location: Manageevents.php?msg=updated");
+                exit();
+            } else {
+                $error = "Failed to update event details: " . $conn->error;
+            }
         }
     }
 }
