@@ -11,10 +11,67 @@ $user_id = $_SESSION['UserID'];
 
 // Handle cancel registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
-    $upd = $conn->prepare("UPDATE event_registration SET RegStatus='Cancelled' WHERE RegistrationID=? AND UserID=?");
-    $upd->bind_param('ss', $_POST['cancel_id'], $user_id);
-    $upd->execute();
-    header("Location: MyRegistrations.php?msg=cancelled"); exit();
+    
+    // 1. Get the EventID first before cancelling so we know which event freed up a slot
+    $evt_stmt = $conn->prepare("SELECT EventID, ClubID FROM event_registration WHERE RegistrationID=? AND UserID=?");
+    $evt_stmt->bind_param('ss', $_POST['cancel_id'], $user_id);
+    $evt_stmt->execute();
+    $evt_res = $evt_stmt->get_result()->fetch_assoc();
+    
+    if ($evt_res) {
+        $event_id = $evt_res['EventID'];
+        $club_id  = $evt_res['ClubID'];
+
+        // 2. Cancel the current user's registration
+        $upd = $conn->prepare("UPDATE event_registration SET RegStatus='Cancelled' WHERE RegistrationID=? AND UserID=?");
+        $upd->bind_param('ss', $_POST['cancel_id'], $user_id);
+        $upd->execute();
+
+        // 3. AUTOMATIC WAITLIST PROMOTION
+        // Find the oldest active waitlisted user for this event (First In, First Out based on Queue)
+        $wait_stmt = $conn->prepare("
+            SELECT * FROM waitlist 
+            WHERE EventID = ? AND WaitlistStatus = 'Waiting' 
+            ORDER BY Queue ASC, WaitJoinDate ASC 
+            LIMIT 1
+        ");
+        $wait_stmt->bind_param('s', $event_id);
+        $wait_stmt->execute();
+        $next_user = $wait_stmt->get_result()->fetch_assoc();
+
+        if ($next_user) {
+            $next_user_id = $next_user['UserID'];
+            $waitlist_id  = $next_user['WaitlistID'];
+
+            // Fetch student name from the user table to keep data consistent with event_registration structure
+            $user_stmt = $conn->prepare("SELECT Name FROM user WHERE UserID = ?");
+            $user_stmt->bind_param('s', $next_user_id);
+            $user_stmt->execute();
+            $user_res = $user_stmt->get_result()->fetch_assoc();
+            $student_name = $user_res ? $user_res['Name'] : '';
+
+            // Generate a fresh unique Registration ID
+            $new_reg_id = 'REG' . strtoupper(uniqid());
+            $today = date('Y-m-d');
+
+            // Insert the waitlisted user into event_registration as 'Confirmed'
+            $promo_stmt = $conn->prepare("
+                INSERT INTO event_registration (RegistrationID, EventID, UserID, StudentName, ClubID, RegistrationDate, RegStatus) 
+                VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')
+            ");
+            $promo_stmt->bind_param('ssssss', $new_reg_id, $event_id, $next_user_id, $student_name, $club_id, $today);
+            
+            if ($promo_stmt->execute()) {
+                // Update waitlist entry to reflect that they have been promoted
+                $upd_wait = $conn->prepare("UPDATE waitlist SET WaitlistStatus = 'Promoted' WHERE WaitlistID = ?");
+                $upd_wait->bind_param('s', $waitlist_id);
+                $upd_wait->execute();
+            }
+        }
+    }
+
+    header("Location: MyRegistrations.php?msg=cancelled"); 
+    exit();
 }
 
 // Fetch all registrations for this user
@@ -78,9 +135,6 @@ $cancelled = count(array_filter($registrations, fn($r) => $r['RegStatus'] === 'C
 
 <?php include 'Navigation.php'; ?>
 
-
-
-
 <div class="main-content">
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:10px;">
@@ -95,7 +149,6 @@ $cancelled = count(array_filter($registrations, fn($r) => $r['RegStatus'] === 'C
         <div class="alert alert-info">ℹ️ Your registration has been cancelled successfully.</div>
     <?php endif; ?>
 
-    <!-- Stats Bar -->
     <div class="stats-bar">
         <div class="reg-stat">
             <span class="reg-stat-num"><?= $total ?></span>
@@ -113,7 +166,6 @@ $cancelled = count(array_filter($registrations, fn($r) => $r['RegStatus'] === 'C
         </div>
     </div>
 
-    <!-- Table -->
     <div class="table-wrap">
         <table class="data-table">
             <thead>
