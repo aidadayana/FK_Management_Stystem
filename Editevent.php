@@ -92,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         $new_reg_id = 'REG' . strtoupper(uniqid());
                         $today = date('Y-m-d');
+//a
 
                         // Balanced INSERT mapping: 6 placeholders -> 6 parameters ('ssssss')
                         $promo_stmt = $conn->prepare("INSERT INTO event_registration (RegistrationID, EventID, UserID, StudentName, ClubID, RegistrationDate, RegStatus) VALUES (?, ?, ?, ?, ?, ?, 'Confirmed')");
